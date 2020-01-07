@@ -196,10 +196,9 @@ class ShapeNetDataset(BaseDataset):
         self._data_path = os.path.join(dataset_opt.dataroot, 'ShapeNet')
         self._category = dataset_opt.category
         pre_transform = T.NormalizeScale()
-        transform = T.FixedPoints(dataset_opt.num_points)
         train_dataset = ShapeNet(self._data_path, self._category, include_normals=dataset_opt.normal, split='trainval',
-                                 pre_transform=pre_transform, transform=transform)
+                                 pre_transform=pre_transform, transform=self.transform)
         test_dataset = ShapeNet(self._data_path, self._category, include_normals=dataset_opt.normal, split='test',
-                                pre_transform=pre_transform, transform=transform)
+                                pre_transform=pre_transform, transform=self.transform)
 
         self._create_dataloaders(train_dataset, test_dataset, validation=None)

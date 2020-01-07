@@ -52,14 +52,8 @@ class S3DISDataset(BaseDataset):
         self._data_path = os.path.join(dataset_opt.dataroot, 'S3DIS')
         pre_transform = T.NormalizeScale()
 
-        transform = T.Compose([
-            T.FixedPoints(dataset_opt.num_points),
-            T.RandomTranslate(0.01),
-            T.RandomRotate(15, axis=0),
-            T.RandomRotate(15, axis=1),
-        ])
         train_dataset = S3DIS_With_Weights(self._data_path, test_area=self.dataset_opt.fold, train=True,
-                                           pre_transform=pre_transform, transform=transform, class_weight_method=dataset_opt.class_weight_method)
+                                           pre_transform=pre_transform, transform=self.transform, class_weight_method=dataset_opt.class_weight_method)
         test_dataset = S3DIS_With_Weights(self._data_path, test_area=self.dataset_opt.fold, train=False,
                                           pre_transform=pre_transform, transform=T.FixedPoints(dataset_opt.num_points))
 

@@ -21,20 +21,19 @@ class ModelNetDataset(BaseDataset):
         self._data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', name)
         pre_transform = T.Compose([T.NormalizeScale(),
                                    MeshToNormal()])
-        transform = T.SamplePoints(dataset_opt.num_points) if contains_key(dataset_opt, "num_points") else None
 
         train_dataset = ModelNet(
             self._data_path,
             name=str(number),
             train=True,
-            transform=transform,
+            transform=self.transform,
             pre_transform=pre_transform)
 
         test_dataset = ModelNet(
             self._data_path,
             name=str(number),
             train=False,
-            transform=transform,
+            transform=self.transform,
             pre_transform=pre_transform)
 
         self._create_dataloaders(train_dataset, test_dataset, validation=None)

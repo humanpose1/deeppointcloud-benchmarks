@@ -10,18 +10,28 @@ from torch_geometric.data import Batch, DataLoader, Dataset
 
 from datasets.transforms import MultiScaleTransform
 from datasets.batch import SimpleBatch
-
+from datasets.data_augmentation import get _transform
+from datasets.utils import contains_key
 
 # A logger for this file
 log = logging.getLogger(__name__)
 
 
 class BaseDataset():
-    def __init__(self, dataset_opt, training_opt):
+    def __init__(self, dataset_opt, training_opt, data_augment_op):
         self.dataset_opt = dataset_opt
         self.training_opt = training_opt
+        self.data_augment_op = data_augment_op
         self.strategies = {}
         self._torch_loader = training_opt.use_torch_loader
+        # Deal with data augmentation
+        if contains_key(dataset_opt, "num_points"):
+            list_transfo = [T.FixedPoints(dataset_opt.num_points)]
+        else:
+            list_transfo = []
+        for name, value in data_augment_op.items():
+            list_transfo.append(get_data_augmentation_transform(name, value))
+        self.transform = T.Compose(list_transfo)
 
     def _create_dataloaders(self, train_dataset,  test_dataset, validation=None):
         """ Creates the data loaders. Must be called in order to complete the setup of the Dataset

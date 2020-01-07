@@ -99,7 +99,7 @@ def main(cfg):
     # Find and create associated dataset
     dataset_config = getattr(cfg.data, tested_dataset_name, None)
     dataset_config.dataroot = hydra.utils.to_absolute_path(dataset_config.dataroot)
-    dataset = find_dataset_using_name(tested_dataset_name)(dataset_config, cfg.training)
+    dataset = find_dataset_using_name(tested_dataset_name)(dataset_config, cfg.training, cfg.data_augment)
 
     # Find and create associated model
     model_config = getattr(cfg.models, tested_model_name, None)
