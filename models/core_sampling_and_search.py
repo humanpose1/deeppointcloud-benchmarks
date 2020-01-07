@@ -3,7 +3,7 @@ from typing import List, Union
 import math
 from functools import partial
 import torch
-from torch_geometric.nn import fps, radius, knn
+from torch_geometric.nn import fps, radius, knn, voxel_grid
 import torch_points as tp
 
 
@@ -96,6 +96,18 @@ class DenseRandomSampler(BaseSampler):
         return idx
 
 
+class GridSampler(BaseSampler):
+    """
+    perform grid subsampling
+    """
+
+    def __init__(self, voxel_size):
+        self._voxel_size = voxel_size
+
+    def sample(self, pos, batch):
+        return voxel_grid(pos, batch, self._voxel_size)
+
+
 class BaseNeighbourFinder(ABC):
 
     def __call__(self, x, y, batch_x, batch_y):
@@ -166,7 +178,7 @@ class MultiscaleRadiusNeighbourFinder(BaseMSNeighbourFinder):
     """ Radius search with support for multiscale for sparse graphs
 
         Arguments:
-            radius {Union[float, List[float]]} 
+            radius {Union[float, List[float]]}
 
         Keyword Arguments:
             max_num_neighbors {Union[int, List[int]]}  (default: {64})
