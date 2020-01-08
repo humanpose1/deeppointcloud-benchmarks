@@ -10,7 +10,7 @@ from torch_geometric.data import Batch, DataLoader, Dataset
 
 from datasets.transforms import MultiScaleTransform
 from datasets.batch import SimpleBatch
-from datasets.data_augmentation import get _transform
+from datasets.data_augmentation import get_data_augmentation_transform
 from datasets.utils import contains_key
 
 # A logger for this file
