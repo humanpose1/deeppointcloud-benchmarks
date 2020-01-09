@@ -11,7 +11,7 @@ from torch_geometric.data import Batch, DataLoader, Dataset
 from datasets.transforms import MultiScaleTransform
 from datasets.batch import SimpleBatch
 from datasets.data_augmentation import get_data_augmentation_transform
-from datasets.utils import contains_key
+# from datasets.utils import contains_key
 
 # A logger for this file
 log = logging.getLogger(__name__)
@@ -25,10 +25,11 @@ class BaseDataset():
         self.strategies = {}
         self._torch_loader = training_opt.use_torch_loader
         # Deal with data augmentation
-        if contains_key(dataset_opt, "num_points"):
+        list_transfo = []
+        try:
             list_transfo = [T.FixedPoints(dataset_opt.num_points)]
-        else:
-            list_transfo = []
+        except:
+            pass
         for name, value in data_augment_op.items():
             list_transfo.append(get_data_augmentation_transform(name, value))
         self.transform = T.Compose(list_transfo)

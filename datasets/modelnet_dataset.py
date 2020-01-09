@@ -4,7 +4,6 @@ from torch_geometric.datasets import ModelNet
 from torch_geometric.data import DataLoader
 import torch_geometric.transforms as T
 
-from datasets.utils import contains_key
 from datasets.transforms import MeshToNormal
 
 AVAILABLE_NUMBERS = ["10", "40"]
