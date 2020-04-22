@@ -94,8 +94,13 @@ it measures loss, feature match recall, hit ratio, rotation error, translation e
                 # as we have concatenated ind,
                 # we need to substract the cum_sum because we deal
                 # with each batch independently
-                ind = batch_ind[batch_idx == b] - cum_sum
-                ind_target = batch_ind_target[batch_idx_target == b] - cum_sum_target
+                ind = batch_ind[b * len(batch_ind) / nb_batches : (b + 1) * len(batch_ind) / nb_batches] - cum_sum
+                ind_target = (
+                    batch_ind_target[
+                        b * len(batch_ind_target) / nb_batches : (b + 1) * len(batch_ind_target) / nb_batches
+                    ]
+                    - cum_sum_target
+                )
                 cum_sum += len(xyz)
                 cum_sum_target += len(xyz_target)
                 rand = torch.randperm(len(feat))[: self.num_points]

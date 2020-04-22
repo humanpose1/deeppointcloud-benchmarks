@@ -61,6 +61,7 @@ def group_data(data, cluster=None, unique_pos_indices=None, mode="last", skip_ke
         if torch.is_tensor(item) and item.size(0) == num_nodes:
             if mode == "last" or key == "batch" or key == SaveOriginalPosId.KEY:
                 data[key] = item[unique_pos_indices]
+
             elif mode == "mean":
                 if key == "y":
                     item_min = item.min()
@@ -114,8 +115,9 @@ class GridSampling:
         skip_keys = []
         if self._quantize_coords:
             data.xyz = data.pos  # Store the coordinates of points
-            data.pos = coords[unique_pos_indices]
-            skip_keys.append("pos")
+            # data.pos = coords[unique_pos_indices]
+            data.pos = coords
+            # skip_keys.append("pos")
 
         data = group_data(data, cluster, unique_pos_indices, mode=self._mode, skip_keys=skip_keys)
         return data

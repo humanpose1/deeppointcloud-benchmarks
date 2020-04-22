@@ -93,7 +93,6 @@ class Patch3DMatch(Base3DMatch):
                 final dataset. (default: :obj:`None`)
             num_random_pt: number of point we select
         """
-        self.is_patch = True
         super(Patch3DMatch, self).__init__(root,
                                            num_frame_per_fragment,
                                            mode,
@@ -243,7 +242,6 @@ class Fragment3DMatch(Base3DMatch):
                  num_pos_pairs=1024,
                  voxel_size_search=0.1):
 
-        self.is_patch = False
         super(Fragment3DMatch, self).__init__(root,
                                               num_frame_per_fragment,
                                               mode,
@@ -308,7 +306,6 @@ class Fragment3DMatch(Base3DMatch):
 
 
 class General3DMatchDataset(BaseSiameseDataset):
-
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         pre_transform = self.pre_transform
@@ -316,7 +313,7 @@ class General3DMatchDataset(BaseSiameseDataset):
         test_transform = self.test_transform
         pre_filter = self.pre_filter
         test_pre_filter = getattr(self, 'test_pre_filter', None)
-
+        self.is_patch = dataset_opt.is_patch
 
         if dataset_opt.is_patch:
             self.train_dataset = Patch3DMatch(
