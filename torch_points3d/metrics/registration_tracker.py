@@ -108,6 +108,7 @@ it measures loss, feature match recall, hit ratio, rotation error, translation e
 
                 matches_gt = torch.stack([ind, ind_target]).T
                 T_gt = estimate_transfo(xyz[matches_gt[:, 0]], xyz_target[matches_gt[:, 1]])
+
                 matches_pred = get_matches(feat[rand], feat_target[rand_target])
                 T_pred = fast_global_registration(
                     xyz[rand][matches_pred[:, 0]], xyz_target[rand_target][matches_pred[:, 1]]
@@ -116,8 +117,16 @@ it measures loss, feature match recall, hit ratio, rotation error, translation e
                 hit_ratio = compute_hit_ratio(
                     xyz[rand][matches_pred[:, 0]], xyz_target[rand_target][matches_pred[:, 1]], T_gt, self.tau_1
                 )
+                hit_ratio_bis = compute_hit_ratio(
+                    xyz[rand][matches_pred[:, 0]],
+                    xyz_target[rand_target][matches_pred[:, 1]],
+                    torch.eye(4, device=xyz.device),
+                    self.tau_1,
+                )
                 trans_error, rot_error = compute_transfo_error(T_pred, T_gt)
-
+                # print(torch.norm(xyz[matches_gt[:, 0]] @ T_gt[:3, :3].T + T_gt[:3, 3] - xyz_target[matches_gt[:, 1]], dim=1).mean())
+                # print(torch.norm(xyz[matches_gt[:, 0]] - xyz_target[matches_gt[:, 1]], dim=1).mean())
+                # print(hit_ratio_bis)
                 self._hit_ratio.add(hit_ratio.item())
                 self._feat_match_ratio.add(float(hit_ratio.item() > self.tau_2))
                 self._trans_error.add(trans_error.item())

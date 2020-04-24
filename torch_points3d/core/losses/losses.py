@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from .metric_losses import *
 from torch_points3d.datasets.segmentation import IGNORE_LABEL
 
 

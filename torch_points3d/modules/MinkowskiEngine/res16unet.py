@@ -23,7 +23,7 @@ class BasicBlockBase(nn.Module):
         D=3,
     ):
         super(BasicBlockBase, self).__init__()
-
+        print(conv_type)
         self.conv1 = conv(inplanes, planes, kernel_size=3, stride=stride, dilation=dilation, conv_type=conv_type, D=D)
         self.norm1 = get_norm(self.NORM_TYPE, planes, D, bn_momentum=bn_momentum)
         self.conv2 = conv(
@@ -627,3 +627,21 @@ class STResTesseract16UNetBase(STRes16UNetBase):
 
 class STResTesseract16UNet18A(STRes16UNet18A, STResTesseract16UNetBase):
     pass
+
+
+# -------------------------FCGF
+class BasicBlockBN(BasicBlockBase):
+    NORM_TYPE = "BN"
+
+
+class BasicBlockIN(BasicBlockBase):
+    NORM_TYPE = "IN"
+
+
+def get_block(norm_type, inplanes, planes, stride=1, dilation=1, downsample=None, bn_momentum=0.1, D=3):
+    if norm_type == "BN":
+        return BasicBlockBN(inplanes, planes, stride, dilation, downsample, bn_momentum, D)
+    elif norm_type == "IN":
+        return BasicBlockIN(inplanes, planes, stride, dilation, downsample, bn_momentum, D)
+    else:
+        raise ValueError(f"Type {norm_type}, not defined")

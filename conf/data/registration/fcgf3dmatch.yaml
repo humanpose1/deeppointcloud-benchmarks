@@ -1,0 +1,11 @@
+data:
+  task: registration
+  class: fcgf3dmatch.FCGF3DMatchDataset
+  dataroot: data
+  name: 3DMatch
+  threed_match_dir: '/media/admincaor/DataHDD2To/mines/code/3DMatch/fcgf_data/threedmatch'
+  voxel_size: 0.025
+  positive_pair_search_voxel_size_multiplier: 1.5
+  min_scale: 0.8
+  max_scale: 1.2
+  rotation_range: 180

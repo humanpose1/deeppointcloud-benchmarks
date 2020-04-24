@@ -185,7 +185,7 @@ class ResnetBlockDown(BaseResBlock):
         dilation=1,
         norm_layer=ME.MinkowskiBatchNorm,
         activation=ME.MinkowskiReLU,
-        bn_momentum=0.1,
+        bn_momentum=0.05,
         dimension=-1,
         down_stride=2,
         **kwargs
@@ -233,7 +233,7 @@ class ResnetBlockUp(BaseResBlock):
         dilation=1,
         norm_layer=ME.MinkowskiBatchNorm,
         activation=ME.MinkowskiReLU,
-        bn_momentum=0.1,
+        bn_momentum=0.05,
         dimension=-1,
         up_stride=2,
         skip=True,
