@@ -1,3 +1,4 @@
+import open3d as o3d
 import os
 import torch
 import hydra
@@ -136,8 +137,10 @@ def test_epoch(
         stage_name = loader.dataset.name
         tracker.reset(stage_name)
         visualizer.reset(epoch, stage_name)
+
         with Ctq(loader) as tq_test_loader:
             for data in tq_test_loader:
+
                 with torch.no_grad():
                     model.set_input(data, device)
                     model.forward()

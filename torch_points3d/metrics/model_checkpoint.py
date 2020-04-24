@@ -21,6 +21,9 @@ DEFAULT_METRICS_FUNC = {
     "ap": max,
     "metric_loss": min,
     "hit_ratio": max,
+    "feat_match_ratio": max,
+    "trans_error": min,
+    "rot_error": min,
 }  # Those map subsentences to their optimization functions
 
 
@@ -218,12 +221,13 @@ class ModelCheckpoint(object):
                 model.schedulers = self._checkpoint.get_schedulers(model)
 
     def find_func_from_metric_name(self, metric_name, default_metrics_func):
+
         for token_name, func in default_metrics_func.items():
             if token_name in metric_name:
                 return func
         raise Exception(
             'The metric name {} doesn t have a func to measure which one is best. Example: For best_train_iou, {"iou":max}'.format(
-                token_name
+                metric_name
             )
         )
 
