@@ -43,7 +43,8 @@ class BaseTracker:
                 metrics[key] = meter_value(loss_meter, dim=0)
         return metrics
 
-    def get_metric_func(self):
+    @property
+    def metric_func(self):
         self._metric_func = {"loss": min}
         return self._metric_func
 

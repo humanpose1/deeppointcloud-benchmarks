@@ -89,6 +89,7 @@ class ShapenetPartTracker(BaseTracker):
             metrics["{}_Imiou_per_class".format(self._stage)] = self._miou_per_class
         return metrics
 
-    def get_metric_func(self):
+    @property
+    def metric_func(self):
         self._metric_func = {"Cmiou": max, "Imiou": max, "loss": min}
         return self._metric_func
