@@ -92,8 +92,7 @@ class SegmentationTracker(BaseTracker):
         metrics["{}_map".format(self._stage)] = self._map
         return metrics
 
-    @property
-    def metric_func(self):
+    def get_metric_func(self):
         self._metric_func = {
             "miou": max,
             "macc": max,

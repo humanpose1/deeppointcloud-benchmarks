@@ -79,7 +79,7 @@ def train_epoch(
                     return 0
 
     metrics = tracker.publish(epoch)
-    checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.metric_func)
+    checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.get_metric_func())
     log.info("Learning rate = %f" % model.learning_rate)
 
 
@@ -117,7 +117,7 @@ def eval_epoch(
 
     metrics = tracker.publish(epoch)
     tracker.print_summary()
-    checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.metric_func)
+    checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.get_metric_func())
 
 
 def test_epoch(
@@ -161,7 +161,7 @@ def test_epoch(
 
         metrics = tracker.publish(epoch)
         tracker.print_summary()
-        checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.metric_func)
+        checkpoint.save_best_models_under_current_metrics(model, metrics, tracker.get_metric_func())
 
 
 def run(
