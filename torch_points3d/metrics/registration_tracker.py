@@ -132,8 +132,7 @@ it measures loss, feature match recall, hit ratio, rotation error, translation e
             metrics["{}_rot_error".format(self._stage)] = float(self._rot_error.value()[0])
         return metrics
 
-    @property
-    def metric_func(self):
+    def get_metric_func(self):
         self._metric_func = {
             "loss": min,
             "hit_ratio": max,
