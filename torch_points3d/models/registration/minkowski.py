@@ -73,7 +73,7 @@ class Minkowski_Baseline_Model_Fragment(BaseModel):
         # loss
         # self.loss_reg = self.metric_loss_module(output, self.labels, hard_pairs)
         self.loss_reg = self.metric_loss_module(
-            self.output, self.output_target, torch.stack((self.ind, self.ind_target), 0).T
+            self.output, self.output_target, torch.stack((self.ind, self.ind_target), 0).T, self.xyz
         )
         self.loss = self.loss_reg
 

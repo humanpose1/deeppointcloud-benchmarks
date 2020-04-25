@@ -32,6 +32,9 @@ def pdist(A, B, dist_type="L2"):
 
 class ContrastiveHardestNegativeLoss(nn.Module):
     def __init__(self, pos_thresh, neg_thresh, num_pos=5192, num_hn_samples=2048):
+        """
+        works well
+        """
         nn.Module.__init__(self)
         self.pos_thresh = pos_thresh
         self.neg_thresh = neg_thresh
@@ -92,22 +95,27 @@ class ContrastiveHardestNegativeLoss(nn.Module):
 
 
 class BatchHardContrastiveLoss(nn.Module):
-    def __init__(self, pos_thresh, neg_thresh):
+    def __init__(self, pos_thresh, neg_thresh, min_dist=0.15):
+        """
+        Doesn't works
+        """
         nn.Module.__init__(self)
         self.pos_thresh = pos_thresh
         self.neg_thresh = neg_thresh
+        self.min_dist = min_dist
 
-    def forward(self, F0, F1, positive_pairs):
+    def forward(self, F0, F1, positive_pairs, xyz0=None, xyz1=None):
 
         posF0 = F0[positive_pairs[:, 0]]
         posF1 = F1[positive_pairs[:, 1]]
 
-        dists = pdist(posF0, posF1, dist_type="L2")
-
-        positive_mask = torch.eye(len(dists), device=dists.device, dtype=dists.dtype)
-
-        furthest_pos, _ = (dists * positive_mask).max(1)
-        closest_neg, _ = (dists + 1e5 * positive_mask).min(1)
+        subxyz0 = xyz0[positive_pairs[:, 0]]
+        false_negative = pdist(subxyz0, subxyz0, dist_type="L2") > self.min_dist
+        # dists = pdist(posF0, posF1, dist_type="L2").view(-1)
+        furthest_pos, _ = (posF0 - posF1).pow(2).max(1)
+        closest_neg = (posF0[0] - posF1[false_negative[0]]).pow(2).sum(1).min() / len(posF0)
+        for i in range(1, len(posF0)):
+            closest_neg += (posF0[i] - posF1[false_negative[i]]).pow(2).sum(1).min() / len(posF0)
 
         pos_loss = F.relu(furthest_pos - self.pos_thresh)
         neg_loss = F.relu(self.neg_thresh - closest_neg)

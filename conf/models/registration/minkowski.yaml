@@ -79,6 +79,7 @@ models:
           params:
             pos_thresh: 0.1
             neg_thresh: 1.4
+            min_dist: 0.1
 
     Res16UNet34A:
         class: minkowski.Minkowski_Baseline_Model_Fragment
