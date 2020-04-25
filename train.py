@@ -49,8 +49,6 @@ def train_epoch(
     iter_data_time = time.time()
     with Ctq(train_loader) as tq_train_loader:
         for i, data in enumerate(tq_train_loader):
-            if i > 1:
-                break
             model.set_input(data, device)
             t_data = time.time() - iter_data_time
 
@@ -141,11 +139,9 @@ def test_epoch(
         visualizer.reset(epoch, stage_name)
 
         with Ctq(loader) as tq_test_loader:
-            i = 0
+
             for data in tq_test_loader:
-                i += 1
-                if i > 20:
-                    break
+
                 with torch.no_grad():
                     model.set_input(data, device)
                     model.forward()
