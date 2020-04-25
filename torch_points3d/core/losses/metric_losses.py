@@ -84,8 +84,31 @@ class ContrastiveHardestNegativeLoss(nn.Module):
         neg_loss1 = F.relu(self.neg_thresh - D10min[mask1]).pow(2)
         return pos_loss.mean(), (neg_loss0.mean() + neg_loss1.mean()) / 2
 
-    def forward(self, F0, F1, matches):
+    def forward(self, F0, F1, matches, xyz0=None, xyz1=None):
 
         pos_loss, neg_loss = self.contrastive_hardest_negative_loss(F0, F1, matches.detach().cpu())
 
         return pos_loss + neg_loss
+
+
+class BatchHardContrastiveLoss(nn.Module):
+    def __init__(self, pos_thresh, neg_thresh):
+        nn.Module.__init__(self)
+        self.pos_thresh = pos_thresh
+        self.neg_thresh = neg_thresh
+
+    def forward(self, F0, F1, positive_pairs):
+
+        posF0 = F0[positive_pairs[:, 0]]
+        posF1 = F1[positive_pairs[:, 1]]
+
+        dists = pdist(posF0, posF1, dist_type="L2")
+
+        positive_mask = torch.eye(len(dists), device=dists.device, dtype=dists.dtype)
+
+        furthest_pos, _ = (dists * positive_mask).max(1)
+        closest_neg, _ = (dists + 1e5 * positive_mask).min(1)
+
+        pos_loss = F.relu(furthest_pos - self.pos_thresh)
+        neg_loss = F.relu(self.neg_thresh - closest_neg)
+        return pos_loss.mean() + neg_loss.mean()

@@ -64,6 +64,22 @@ models:
         miner:
           class: "BatchHardMiner"
 
+    Res16UNet34A_1:
+        class: minkowski.Minkowski_Baseline_Model_Fragment
+        conv_type: "SPARSE"
+        model_name: "Res16UNet14A"
+        feature_dimension: 1
+        out_channels: 32
+        D: 3
+        mlp_cls:
+            nn: [32]
+        normalize_feature: True
+        metric_loss:
+          class: "BatchHardContrastiveLoss"
+          params:
+            pos_thresh: 0.1
+            neg_thresh: 1.4
+
     Res16UNet34A:
         class: minkowski.Minkowski_Baseline_Model_Fragment
         conv_type: "SPARSE"
