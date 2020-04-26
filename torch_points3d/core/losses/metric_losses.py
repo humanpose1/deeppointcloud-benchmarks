@@ -113,10 +113,15 @@ class BatchHardContrastiveLoss(nn.Module):
         false_negative = pdist(subxyz0, subxyz0, dist_type="L2") > self.min_dist
         # dists = pdist(posF0, posF1, dist_type="L2").view(-1)
         furthest_pos, _ = (posF0 - posF1).pow(2).max(1)
-        closest_neg = (posF0[0] - posF1[false_negative[0]]).pow(2).sum(1).min() / len(posF0)
-        for i in range(1, len(posF0)):
-            closest_neg += (posF0[i] - posF1[false_negative[i]]).pow(2).sum(1).min() / len(posF0)
+        neg_loss = F.relu(self.neg_thresh - (posF0[0] - posF1[false_negative[0]]).pow(2).sum(1).min()).pow(2) / len(
+            posF0
+        )
 
-        pos_loss = F.relu(furthest_pos - self.pos_thresh)
-        neg_loss = F.relu(self.neg_thresh - closest_neg)
+        for i in range(1, len(posF0)):
+            neg_loss += F.relu(self.neg_thresh - (posF0[i] - posF1[false_negative[i]]).pow(2).sum(1).min()).pow(
+                2
+            ) / len(posF0)
+
+        pos_loss = F.relu(furthest_pos - self.pos_thresh).pow(2)
+        # neg_loss = F.relu(self.neg_thresh - closest_neg)
         return pos_loss.mean() + neg_loss.mean()
