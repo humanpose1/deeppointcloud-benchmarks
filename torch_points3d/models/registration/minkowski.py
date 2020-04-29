@@ -49,6 +49,7 @@ class BaseMinkowski(BaseModel):
             self.FC_layer = torch.nn.Identity()
 
     def set_input(self, data, device):
+        print(data)
         coords = torch.cat([data.batch.unsqueeze(-1).int(), data.pos.int()], -1)
         self.input = ME.SparseTensor(data.x, coords=coords).to(device)
         self.xyz = torch.stack((data.pos_x, data.pos_y, data.pos_z), 0).T.to(device)
