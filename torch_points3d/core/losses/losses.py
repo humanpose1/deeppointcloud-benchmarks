@@ -7,6 +7,7 @@ from torch.autograd import Variable
 
 from .metric_losses import *
 from torch_points3d.datasets.segmentation import IGNORE_LABEL
+from .metric_losses import *
 
 
 def filter_valid(output, target, ignore_label=IGNORE_LABEL, other=None):

@@ -28,6 +28,7 @@ from torch_points3d.core.data_transform import (
     RandomCoordsFlip,
     RemoveDuplicateCoords,
     XYZFeature,
+    ScalePos,
 )
 from torch_points3d.core.spatial_ops import RadiusNeighbourFinder, KNNInterpolate
 from torch_points3d.utils.enums import ConvolutionFormat
@@ -256,7 +257,7 @@ class Testhelpers(unittest.TestCase):
 
         data_out = t(data.clone())
 
-        x = data_out.z
+        x = data_out.pos_z
 
         self.assertEqual(np.array_equal(x, pos[:, -1]), True)
 
@@ -264,10 +265,16 @@ class Testhelpers(unittest.TestCase):
 
         self.assertEqual(np.array_equal(x, pos[:, -1]), False)
 
-        self.assertIn("z", data_out.keys)
+        self.assertIn("pos_z", data_out.keys)
         self.assertIn("pos", data_out.keys)
-        self.assertNotIn("x", data_out.keys)
-        self.assertNotIn("y", data_out.keys)
+        self.assertNotIn("pos_x", data_out.keys)
+        self.assertNotIn("pos_y", data_out.keys)
+
+    def test_scalePos(self):
+        tr = ScalePos(scale=2.0)
+        d = Data(pos=torch.tensor([[1, 0, 0], [0, 1, 1]]).float())
+        d = tr(d)
+        torch.testing.assert_allclose(d.pos, torch.tensor([[2, 0, 0], [0, 2, 2]]).float())
 
 
 if __name__ == "__main__":

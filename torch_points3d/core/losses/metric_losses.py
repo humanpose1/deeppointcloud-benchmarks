@@ -97,7 +97,11 @@ class ContrastiveHardestNegativeLoss(nn.Module):
 class BatchHardContrastiveLoss(nn.Module):
     def __init__(self, pos_thresh, neg_thresh, min_dist=0.15):
         """
+<<<<<<< HEAD
         Doesn't works
+=======
+        Still need further tests
+>>>>>>> descriptors/fcgf
         """
         nn.Module.__init__(self)
         self.pos_thresh = pos_thresh

@@ -56,8 +56,8 @@ def get_geman_mclure_weight(xyz, xyz_target, mu):
     return (mu / (mu + norm2)).view(-1, 1)
 
 
-def get_cross_product_matrix(k, device="cpu"):
-    return torch.tensor([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]], device=device)
+def get_cross_product_matrix(k):
+    return torch.tensor([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]], device=k.device)
 
 
 def rodrigues(axis, theta, device="cpu"):
@@ -65,9 +65,10 @@ def rodrigues(axis, theta, device="cpu"):
     given an axis of norm one and an angle, compute the rotation matrix using rodrigues formula
     source : https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
     """
-    K = get_cross_product_matrix(axis, device)
-    t = torch.tensor([theta], device=device)
-    R = torch.eye(3, device=device) + torch.sin(t) * K + (1 - torch.cos(t)) * K.mm(K)
+    K = get_cross_product_matrix(axis)
+    t = torch.tensor([theta], device=axis.device)
+    R = torch.eye(3, device=axis.device) + torch.sin(t) * K + (1 - torch.cos(t)) * K.mm(K)
+
     return R
 
 

@@ -11,80 +11,92 @@ from torch_points3d.core.common_modules import FastBatchNorm1d
 log = logging.getLogger(__name__)
 
 
-class Minkowski_Baseline_Model_Fragment(BaseModel):
+class BaseMinkowski(BaseModel):
     def __init__(self, option, model_type, dataset, modules):
-        super(Minkowski_Baseline_Model_Fragment, self).__init__(option)
 
-        self.model = initialize_minkowski_unet(
-            option.model_name, dataset.feature_dimension, option.out_channels, option.D
-        )
+        BaseModel.__init__(self, option)
+        self.mode = option.loss_mode
+        self.normalize_feature = option.normalize_feature
+        self.loss_names = ["loss_reg", "loss"]
         self.metric_loss_module, self.miner_module = BaseModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
-        # self.num_pos_pairs = option.num_pos_pairs
-        self.loss_names = ["loss_reg", "loss"]
 
         # Last Layer
-        last_mlp_opt = option.mlp_cls
-        in_feat = last_mlp_opt.nn[0]
-        self.FC_layer = Sequential()
-        for i in range(1, len(last_mlp_opt.nn)):
-            self.FC_layer.add_module(
-                str(i),
-                Sequential(
-                    *[
-                        Linear(in_feat, last_mlp_opt.nn[i], bias=False),
-                        FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
-                        LeakyReLU(0.2),
-                    ]
-                ),
-            )
-            in_feat = last_mlp_opt.nn[i]
 
-        if last_mlp_opt.dropout:
-            self.FC_layer.add_module("Dropout", Dropout(p=last_mlp_opt.dropout))
+        if option.mlp_cls is not None:
+            last_mlp_opt = option.mlp_cls
+            in_feat = last_mlp_opt.nn[0]
+            self.FC_layer = Sequential()
+            for i in range(1, len(last_mlp_opt.nn)):
+                self.FC_layer.add_module(
+                    str(i),
+                    Sequential(
+                        *[
+                            Linear(in_feat, last_mlp_opt.nn[i], bias=False),
+                            FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
+                            LeakyReLU(0.2),
+                        ]
+                    ),
+                )
+                in_feat = last_mlp_opt.nn[i]
 
-        self.FC_layer.add_module("Class", Linear(in_feat, in_feat, bias=False))
+            if last_mlp_opt.dropout:
+                self.FC_layer.add_module("Dropout", Dropout(p=last_mlp_opt.dropout))
+
+            self.FC_layer.add_module("Class", Linear(in_feat, in_feat, bias=False))
+        else:
+            self.FC_layer = torch.nn.Identity()
 
     def set_input(self, data, device):
         coords = torch.cat([data.batch.unsqueeze(-1).int(), data.pos.int()], -1)
         self.input = ME.SparseTensor(data.x, coords=coords).to(device)
-        self.xyz = data.xyz.to(device)
+        self.xyz = torch.stack((data.pos_x, data.pos_y, data.pos_z), 0).T.to(device)
         if hasattr(data, "pos_target"):
             coords_target = torch.cat([data.batch_target.unsqueeze(-1).int(), data.pos_target.int()], -1)
             self.input_target = ME.SparseTensor(data.x_target, coords=coords_target).to(device)
-            self.xyz_target = data.xyz_target.to(device)
-            self.ind = data.pair_ind[:, 0].to(torch.long).to(device)
-            self.ind_target = data.pair_ind[:, 1].to(torch.long).to(device)
-            rang = torch.arange(0, data.pair_ind.shape[0])
-            self.labels = torch.cat([rang, rang], 0).to(device)
+            self.xyz_target = torch.stack((data.pos_x_target, data.pos_y_target, data.pos_z_target), 0).T.to(device)
+            self.match = data.pair_ind.to(torch.long).to(device)
+            self.size_match = data.size_pair_ind.to(torch.long).to(device)
         else:
-            self.labels = None
+            self.match = None
 
-    def apply_nn(self, input):
-        output = self.model(input).F
-        return output / (torch.norm(output, p=2, dim=1, keepdim=True) + 1e-3)
-
-    def compute_loss(self):
-        # miner
-        output = torch.cat([self.output[self.ind], self.output_target[self.ind_target]], 0)
-        if self.miner_module is not None:
-            self.miner_module(output, self.labels)
-        # loss
-        # self.loss_reg = self.metric_loss_module(output, self.labels, hard_pairs)
+    def compute_loss_match(self):
         self.loss_reg = self.metric_loss_module(
-            self.output, self.output_target, torch.stack((self.ind, self.ind_target), 0).T, self.xyz
+            self.output, self.output_target, self.match[:, :2], self.xyz, self.xyz_target
         )
         self.loss = self.loss_reg
 
+    def compute_loss_label(self):
+        """
+        compute the loss separating the miner and the loss
+        each point correspond to a labels
+        """
+        output = torch.cat([self.output[self.match[:, 0]], self.output_target[self.match[:, 1]]], 0)
+        rang = torch.arange(0, len(self.match), dtype=torch.long, device=self.match.device)
+        labels = torch.cat([rang, rang], 0)
+        hard_pairs = None
+        if self.miner_module is not None:
+            hard_pairs = self.miner_module(output, labels)
+        # loss
+        self.loss_reg = self.metric_loss_module(output, labels, hard_pairs)
+        self.loss = self.loss_reg
+
+    def apply_nn(self, input):
+        raise NotImplementedError("Model still not defined")
+
     def forward(self):
         self.output = self.apply_nn(self.input)
-        if self.labels is None:
+        if self.match is None:
             return self.output
 
         self.output_target = self.apply_nn(self.input_target)
-
-        self.compute_loss()
+        if self.mode == "match":
+            self.compute_loss_match()
+        elif self.mode == "label":
+            self.compute_loss_label()
+        else:
+            raise NotImplementedError("The mode for the loss is incorrect")
 
         return self.output
 
@@ -93,25 +105,25 @@ class Minkowski_Baseline_Model_Fragment(BaseModel):
             self.loss.backward()
 
     def get_outputs(self):
-        if self.labels is not None:
+        if self.match is not None:
             return self.output, self.output_target
         else:
             return self.output
 
     def get_ind(self):
-        if self.labels is not None:
-            return self.ind, self.ind_target
+        if self.match is not None:
+            return self.match[:, 0], self.match[:, 1], self.size_match
         else:
             return None
 
     def get_xyz(self):
-        if self.labels is not None:
+        if self.match is not None:
             return self.xyz, self.xyz_target
         else:
             return self.xyz
 
     def get_batch_idx(self):
-        if self.labels is not None:
+        if self.match is not None:
             batch = self.input.C[:, 0]
             batch_target = self.input_target.C[:, 0]
             return batch, batch_target
@@ -119,49 +131,61 @@ class Minkowski_Baseline_Model_Fragment(BaseModel):
             return None
 
 
-class MinkowskiFragment(UnwrappedUnetBasedModel):
+class Minkowski_Baseline_Model_Fragment(BaseMinkowski):
     def __init__(self, option, model_type, dataset, modules):
-        # call the initialization method of UnetBasedModel
-        self.normalize_feature = option.normalize_feature
-        UnwrappedUnetBasedModel.__init__(self, option, model_type, dataset, modules)
-        self.loss_names = ["loss_reg", "loss"]
-        # Last Layer
-        last_mlp_opt = option.mlp_cls
-        in_feat = last_mlp_opt.nn[0]
-        self.FC_layer = Sequential()
-        for i in range(1, len(last_mlp_opt.nn)):
-            self.FC_layer.add_module(
-                str(i),
-                Sequential(
-                    *[
-                        Linear(in_feat, last_mlp_opt.nn[i], bias=False),
-                        FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
-                        LeakyReLU(0.2),
-                    ]
-                ),
-            )
-            in_feat = last_mlp_opt.nn[i]
+        BaseMinkowski.__init__(self, option, model_type, dataset, modules)
 
-        if last_mlp_opt.dropout:
-            self.FC_layer.add_module("Dropout", Dropout(p=last_mlp_opt.dropout))
+        self.model = initialize_minkowski_unet(
+            option.model_name,
+            in_channels=dataset.feature_dimension,
+            out_channels=option.out_channels,
+            D=option.D,
+            conv1_kernel_size=option.conv1_kernel_size,
+        )
 
-        self.FC_layer.add_module("Class", Linear(in_feat, in_feat, bias=False))
-
-    def set_input(self, data, device):
-        coords = torch.cat([data.batch.unsqueeze(-1).int(), data.pos.int()], -1)
-        self.input = ME.SparseTensor(data.x, coords=coords).to(device)
-        self.xyz = data.xyz.to(device)
-        if hasattr(data, "pos_target"):
-            coords_target = torch.cat([data.batch_target.unsqueeze(-1).int(), data.pos_target.int()], -1)
-            self.input_target = ME.SparseTensor(data.x_target, coords=coords_target).to(device)
-            self.xyz_target = data.xyz_target.to(device)
-
-            self.ind = data.pair_ind[:, 0].to(torch.long).to(device)
-            self.ind_target = data.pair_ind[:, 1].to(torch.long).to(device)
-            rang = torch.arange(0, data.pair_ind.shape[0])
-            self.labels = torch.cat([rang, rang], 0).to(device)
+    def apply_nn(self, input):
+        output = self.model(input).F
+        output = self.FC_layer(output)
+        if self.normalize_feature:
+            return output / (torch.norm(output, p=2, dim=1, keepdim=True) + 1e-3)
         else:
-            self.labels = None
+            return output
+
+
+class MinkowskiFragment(BaseMinkowski, UnwrappedUnetBasedModel):
+    def __init__(self, option, model_type, dataset, modules):
+        UnwrappedUnetBasedModel.__init__(self, option, model_type, dataset, modules)
+        self.mode = option.loss_mode
+        self.normalize_feature = option.normalize_feature
+        self.loss_names = ["loss_reg", "loss"]
+        self.metric_loss_module, self.miner_module = BaseModel.get_metric_loss_and_miner(
+            getattr(option, "metric_loss", None), getattr(option, "miner", None)
+        )
+        # Last Layer
+
+        if option.mlp_cls is not None:
+            last_mlp_opt = option.mlp_cls
+            in_feat = last_mlp_opt.nn[0]
+            self.FC_layer = Sequential()
+            for i in range(1, len(last_mlp_opt.nn)):
+                self.FC_layer.add_module(
+                    str(i),
+                    Sequential(
+                        *[
+                            Linear(in_feat, last_mlp_opt.nn[i], bias=False),
+                            FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
+                            LeakyReLU(0.2),
+                        ]
+                    ),
+                )
+                in_feat = last_mlp_opt.nn[i]
+
+            if last_mlp_opt.dropout:
+                self.FC_layer.add_module("Dropout", Dropout(p=last_mlp_opt.dropout))
+
+            self.FC_layer.add_module("Class", Linear(in_feat, in_feat, bias=False))
+        else:
+            self.FC_layer = torch.nn.Identity()
 
     def apply_nn(self, input):
         x = input
@@ -181,53 +205,3 @@ class MinkowskiFragment(UnwrappedUnetBasedModel):
             return out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
         else:
             return out_feat
-
-    def compute_loss(self):
-        # miner
-        output = torch.cat([self.output[self.ind], self.output_target[self.ind_target]], 0)
-        hard_pairs = None
-        if self.miner_module is not None:
-            hard_pairs = self.miner_module(output, self.labels)
-        # loss
-        self.loss_reg = self.metric_loss_module(output, self.labels, hard_pairs)
-        self.loss = self.loss_reg
-
-    def forward(self):
-        self.output = self.apply_nn(self.input)
-        if self.labels is None:
-            return self.output
-
-        self.output_target = self.apply_nn(self.input_target)
-        self.compute_loss()
-
-        return self.output
-
-    def backward(self):
-        if hasattr(self, "loss"):
-            self.loss.backward()
-
-    def get_outputs(self):
-        if self.labels is not None:
-            return self.output, self.output_target
-        else:
-            return self.output
-
-    def get_ind(self):
-        if self.labels is not None:
-            return self.ind, self.ind_target
-        else:
-            return None
-
-    def get_xyz(self):
-        if self.labels is not None:
-            return self.xyz, self.xyz_target
-        else:
-            return self.xyz
-
-    def get_batch_idx(self):
-        if self.labels is not None:
-            batch = self.input.C[:, 0]
-            batch_target = self.input_target.C[:, 0]
-            return batch, batch_target
-        else:
-            return None
