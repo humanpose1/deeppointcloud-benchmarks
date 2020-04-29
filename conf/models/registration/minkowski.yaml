@@ -120,26 +120,24 @@ models:
 
 
     # Not Working
-    ResUNetBN2C:
+    ResUNetBN2B:
         class: minkowski.Minkowski_Baseline_Model_Fragment
         conv_type: "SPARSE"
-        model_name: "ResUNetBN2C"
+        model_name: "ResUNetBN2B"
+        loss_mode: "match"
         in_channels: 1
         conv1_kernel_size: 5
         out_channels: 32
         D: 3
-        mlp_cls:
-          nn: [32]
         num_pos_pairs: 1024
         normalize_feature: True
         metric_loss:
-          class: "ContrastiveLoss"
+          class: "ContrastiveHardestNegativeLoss"
           params:
-            pos_margin: 0.1
-            neg_margin: 1.4
-            power: 1
-        miner:
-          class: "BatchHardMiner"
+            num_pos: 1024
+            num_hn_samples: 256
+            pos_thresh: 0.1
+            neg_thresh: 1.4
 
     Res16UNet34B:
       # to big...

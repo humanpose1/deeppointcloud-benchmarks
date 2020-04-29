@@ -9,14 +9,14 @@ from .common import NormType
 
 class ResUNet2(ME.MinkowskiNetwork):
     NORM_TYPE = None
-    BLOCK_NORM_TYPE = "BN"
+    BLOCK_NORM_TYPE = NormType.BATCH_NORM
     CHANNELS = [None, 32, 64, 128, 256]
     TR_CHANNELS = [None, 32, 64, 64, 128]
 
     # To use the model, must call initialize_coords before forward pass.
     # Once data is processed, call clear to reset the model before calling initialize_coords
     def __init__(
-        self, in_channels=3, out_channels=32, bn_momentum=0.1, normalize_feature=None, conv1_kernel_size=None, D=3
+        self, in_channels=3, out_channels=32, bn_momentum=0.01, normalize_feature=True, conv1_kernel_size=5, D=3
     ):
         ME.MinkowskiNetwork.__init__(self, D)
         NORM_TYPE = self.NORM_TYPE
@@ -194,11 +194,11 @@ class ResUNet2(ME.MinkowskiNetwork):
 
 
 class ResUNetBN2(ResUNet2):
-    NORM_TYPE = "BN"
+    NORM_TYPE = NormType.BATCH_NORM
 
 
 class ResUNetBN2B(ResUNet2):
-    NORM_TYPE = "BN"
+    NORM_TYPE = NormType.BATCH_NORM
     CHANNELS = [None, 32, 64, 128, 256]
     TR_CHANNELS = [None, 64, 64, 64, 64]
 

@@ -12,6 +12,4 @@ def initialize_minkowski_unet(
 ):
     net_cls = getattr(_custom_models, model_name)
 
-    return net_cls(
-        in_channels=in_channels, out_channels=out_channels, D=D, conv1_kernel_size=conv1_kernel_size, **kwargs
-    )
+    return net_cls(in_channels=in_channels, out_channels=out_channels, D=D, conv1_kernel_size=conv1_kernel_size)

@@ -145,7 +145,7 @@ class ResNetBase(MinkowskiNetwork):
         assert self.BLOCK is not None
         assert self.OUT_PIXEL_DIST > 0
 
-        self.network_initialization(in_channels, out_channels, D, conv1_kernel_size)
+        self.network_initialization(in_channels, out_channels, D)
         self.weight_initialization()
 
     def network_initialization(self, in_channels, out_channels, D):
@@ -635,7 +635,7 @@ class STResTesseract16UNet18A(STRes16UNet18A, STResTesseract16UNetBase):
 
 # -------------------------FCGF
 class BasicBlockBN(BasicBlockBase):
-    NORM_TYPE = "BN"
+    NORM_TYPE = NormType.BATCH_NORM
 
 
 class BasicBlockIN(BasicBlockBase):
@@ -643,8 +643,16 @@ class BasicBlockIN(BasicBlockBase):
 
 
 def get_block(norm_type, inplanes, planes, stride=1, dilation=1, downsample=None, bn_momentum=0.1, D=3):
-    if norm_type == "BN":
-        return BasicBlockBN(inplanes, planes, stride, dilation, downsample, bn_momentum, D)
+    if norm_type == NormType.BATCH_NORM:
+        return BasicBlockBN(
+            inplanes=inplanes,
+            planes=planes,
+            stride=stride,
+            dilation=dilation,
+            downsample=downsample,
+            bn_momentum=bn_momentum,
+            D=D,
+        )
     elif norm_type == "IN":
         return BasicBlockIN(inplanes, planes, stride, dilation, downsample, bn_momentum, D)
     else:

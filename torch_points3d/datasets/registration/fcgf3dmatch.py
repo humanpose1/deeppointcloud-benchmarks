@@ -256,13 +256,18 @@ class IndoorPairDataset(PairDataset):
         feats0 = torch.from_numpy(feats0).to(torch.float)
         feats1 = torch.from_numpy(feats1).to(torch.float)
 
-        data = Pair(xyz=torch.from_numpy(xyz0).to(torch.float),
-                    xyz_target=torch.from_numpy(xyz1).to(torch.float),
+        data = Pair(pos_x=torch.from_numpy(xyz0[:, 0]).to(torch.float),
+                    pos_y=torch.from_numpy(xyz0[:, 1]).to(torch.float),
+                    pos_z=torch.from_numpy(xyz0[:, 2]).to(torch.float),
+                    pos_x_target=torch.from_numpy(xyz1[:, 0]).to(torch.float),
+                    pos_y_target=torch.from_numpy(xyz1[:, 1]).to(torch.float),
+                    pos_z_target=torch.from_numpy(xyz1[:, 2]).to(torch.float),
                     pos=torch.from_numpy(coords0),
                     pos_target=torch.from_numpy(coords1),
                     x=feats0,
                     x_target=feats1,
-                    pair_ind=matches)
+                    pair_ind=matches,
+                    size_pair_ind=torch.tensor([len(matches)]))
         # return xyz0, xyz1, coords0, coords1, feats0, feats1, matches
         return data
 
@@ -331,7 +336,7 @@ class FCGF3DMatchDataset(BaseSiameseDataset):
                                                     random_rotation=True,
                                                     config=dataset_opt)
 
-        self.test_dataset = ThreeDMatchPairDataset('train',
+        self.test_dataset = ThreeDMatchPairDataset('val',
                                                    transform=None,
                                                    random_scale=False,
                                                    random_rotation=False,
