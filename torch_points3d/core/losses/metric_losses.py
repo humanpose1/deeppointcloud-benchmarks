@@ -5,6 +5,26 @@ import numpy as np
 import MinkowskiEngine as ME
 
 
+class Cube:
+    def __init__(self, min_cube, max_cube):
+        self.min_cube = min_cube
+        self.max_cube = max_cube
+
+    def isin(self, points):
+        mask_up = torch.prod(points - self.min_cube, 1) > 0
+        mask_down = torch.prod(self.max_cube - points, 1) > 0
+        return mask_up & mask_down
+
+    @staticmethod
+    def make_cube(pcd):
+        """
+        ball that surround the point cloud
+        """
+        min_pt, _ = pcd.min(0)
+        max_pt, _ = pcd.max(0)
+        return Ball(min_cube=min_pt, max_cube=max_pt)
+
+
 def _hash(arr, M):
     if isinstance(arr, np.ndarray):
         N, D = arr.shape
@@ -33,7 +53,7 @@ def pdist(A, B, dist_type="L2"):
 class ContrastiveHardestNegativeLoss(nn.Module):
     def __init__(self, pos_thresh, neg_thresh, num_pos=5192, num_hn_samples=2048):
         """
-        works well
+        taken from original implementation...
         """
         nn.Module.__init__(self)
         self.pos_thresh = pos_thresh
@@ -41,7 +61,7 @@ class ContrastiveHardestNegativeLoss(nn.Module):
         self.num_pos = num_pos
         self.num_hn_samples = num_hn_samples
 
-    def contrastive_hardest_negative_loss(self, F0, F1, positive_pairs, thresh=None):
+    def contrastive_hardest_negative_loss(self, F0, F1, positive_pairs, xyz0=None, xyz1=None, thresh=None):
         """
         Generate negative pairs
         """
@@ -58,6 +78,8 @@ class ContrastiveHardestNegativeLoss(nn.Module):
             sample_pos_pairs = positive_pairs
 
         # Find negatives for all F1[positive_pairs[:, 1]]
+        # cube0 = Cube.make_cube(xyz0[positive_pairs[;, 0]])
+        # cube1 = Cube.make_cube(xyz1[positive_pairs[;, 1]])
         subF0, subF1 = F0[sel0], F1[sel1]
 
         pos_ind0 = sample_pos_pairs[:, 0].long()
@@ -82,6 +104,8 @@ class ContrastiveHardestNegativeLoss(nn.Module):
 
         mask0 = torch.from_numpy(np.logical_not(np.isin(neg_keys0, pos_keys, assume_unique=False)))
         mask1 = torch.from_numpy(np.logical_not(np.isin(neg_keys1, pos_keys, assume_unique=False)))
+        # mask0 = cube0.isin(xyz1[D01ind])
+        # mask1 = cube1.isin(xyz0[D10ind])
         pos_loss = F.relu((posF0 - posF1).pow(2).sum(1) - self.pos_thresh)
         neg_loss0 = F.relu(self.neg_thresh - D01min[mask0]).pow(2)
         neg_loss1 = F.relu(self.neg_thresh - D10min[mask1]).pow(2)
@@ -89,7 +113,7 @@ class ContrastiveHardestNegativeLoss(nn.Module):
 
     def forward(self, F0, F1, matches, xyz0=None, xyz1=None):
 
-        pos_loss, neg_loss = self.contrastive_hardest_negative_loss(F0, F1, matches.detach().cpu())
+        pos_loss, neg_loss = self.contrastive_hardest_negative_loss(F0, F1, matches.detach().cpu(), xyz0, xyz1)
 
         return pos_loss + neg_loss
 
