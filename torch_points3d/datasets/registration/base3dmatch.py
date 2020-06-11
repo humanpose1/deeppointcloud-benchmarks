@@ -332,7 +332,6 @@ class Base3DMatch(Dataset):
             log.info("precompute patches and save it")
             self._save_patches(self.mode)
 
-
     def get(self, idx):
         raise NotImplementedError("implement class to get patch or fragment or more")
 
