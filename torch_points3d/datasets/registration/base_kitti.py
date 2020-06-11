@@ -60,10 +60,11 @@ class BaseKitti(Dataset):
         """
         KITTI Odometry dataset for pair registration
         """
+
         self.mode = mode
         self.max_dist_overlap = max_dist_overlap
         self.max_time_distance = max_time_distance
-        if mode not in self.dict_urls.keys():
+        if mode not in self.dict_seq.keys():
             raise RuntimeError('this mode {} does '
                                'not exist'
                                '(train|val|test)'.format(mode))
@@ -82,8 +83,6 @@ class BaseKitti(Dataset):
     def processed_file_names(self):
         res = [osp.join(self.mode, "matches"),
                osp.join(self.mode, "fragment")]
-        if self.is_offline:
-            res.append(osp.join(self.mode, "patches"))
         return res
 
     def _pre_transform_fragment(self, mod):
@@ -107,15 +106,15 @@ class BaseKitti(Dataset):
             T_calib = read_calib_file(osp.join(in_dir, "sequences", "{:02d}".format(drive), "calib.txt"))
             all_poses = np.genfromtxt(osp.join(in_dir, "refined_poses", "{:02d}.txt".format(drive)))
             list_name_frames = sorted([f for f in os.listdir(path_frames) if "bin" in f])
-            for i, name in list_name_frames:
+            for i, name in enumerate(list_name_frames):
 
                 pose = all_poses[i].reshape((3, 4))
                 xyzr = np.fromfile(osp.join(path_frames, name), dtype=np.float32).reshape((-1, 4))
                 xyzr[:, :3] = xyzr[:, :3].dot(T_calib[:3, :3].T) + T_calib[:3, 3]
-                xyzr[:, :3] = xyzr[:, :3].dot(pose.T) + pose[:3, 3]
+                xyzr[:, :3] = xyzr[:, :3].dot(pose[:3, :3].T) + pose[:3, 3]
 
                 data = Data(pos=torch.from_numpy(xyzr[:, :3]),
-                            reflectance=torch.from_numpy(xyzr[:, 4]))
+                            reflectance=torch.from_numpy(xyzr[:, 3]))
                 out_path = osp.join(out_dir, name.split('.')[0] + ".pt")
                 if(self.pre_transform is not None):
                     data = self.pre_transform(data)
@@ -133,8 +132,8 @@ class BaseKitti(Dataset):
             path_fragment = osp.join(self.processed_dir, mod, "fragment", "{:02d}".format(drive))
             list_name_frames = sorted([f for f in os.listdir(path_fragment) if "pt" in f])
 
-            for i in range(list_name_frames):
-                for j in range(list_name_frames):
+            for i in range(len(list_name_frames)):
+                for j in range(len(list_name_frames)):
                     if((j - i) > 0 and (j - i) < self.max_time_distance):
                         out_path = osp.join(out_dir,
                                             'matches{:06d}.npy'.format(ind))
