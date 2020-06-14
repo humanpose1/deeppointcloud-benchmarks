@@ -66,6 +66,7 @@ class KittiDataset(BaseSiameseDataset):
         train_transform = self.train_transform
         test_transform = self.test_transform
         pre_filter = self.pre_filter
+        self.tau_1 = dataset_opt.tau_1
 
         self.train_dataset = FragmentKitti(
             root=self._data_path,
@@ -118,4 +119,4 @@ class KittiDataset(BaseSiameseDataset):
         Returns:
             [BaseTracker] -- tracker
         """
-        return FragmentRegistrationTracker(self, wandb_log=wandb_log, use_tensorboard=tensorboard_log)
+        return FragmentRegistrationTracker(self, wandb_log=wandb_log, use_tensorboard=tensorboard_log, tau_1=self.tau_1)
