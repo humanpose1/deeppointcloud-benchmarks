@@ -72,7 +72,7 @@ class SiameseModelNetDataset(BaseSiameseDataset):
 
         self.test_dataset = SiameseModelNet(
             root=self._data_path,
-            mode="val",
+            train=False,
             self_supervised=True,
             min_size_block=dataset_opt.min_size_block,
             max_size_block=dataset_opt.max_size_block,
