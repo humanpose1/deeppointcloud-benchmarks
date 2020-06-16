@@ -7,6 +7,7 @@ import torch
 from torch_points3d.datasets.classification.modelnet import SampledModelNet
 from torch_points3d.datasets.registration.base_siamese_dataset import BaseSiameseDataset
 from torch_points3d.datasets.registration.base_siamese_dataset import GeneralFragment
+from torch_points3d.metrics.registration_tracker import FragmentRegistrationTracker
 
 
 class SiameseModelNet(SampledModelNet, GeneralFragment):

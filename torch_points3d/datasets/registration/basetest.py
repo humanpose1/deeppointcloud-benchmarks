@@ -189,7 +189,6 @@ class BaseETHTest(BaseTest):
         if the descriptors generalize well.
         """
 
-        self.list_urls_test = ["url"]
         super(BaseTest, self).__init__(root,
                                        transform,
                                        pre_transform,
@@ -199,4 +198,4 @@ class BaseETHTest(BaseTest):
                                        num_random_pt)
 
     def download(self):
-        raise NotImplementedError("need to implement test for this dataset")
+        pass

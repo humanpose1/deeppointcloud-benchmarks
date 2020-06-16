@@ -67,6 +67,8 @@ class KittiDataset(BaseSiameseDataset):
         test_transform = self.test_transform
         pre_filter = self.pre_filter
         self.tau_1 = dataset_opt.tau_1
+        self.rot_thresh = dataset_opt.rot_thresh
+        self.trans_thresh = dataset_opt.trans_thresh
 
         self.train_dataset = FragmentKitti(
             root=self._data_path,

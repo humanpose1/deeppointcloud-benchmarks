@@ -136,6 +136,41 @@ def fast_global_registration(xyz, xyz_target, mu_init=1, num_iter=20):
     return T_res
 
 
+def teaser_pp_registration(
+    xyz,
+    xyz_target,
+    noise_bound=0.05,
+    cbar2=1,
+    rotation_gnc_factor=1.4,
+    rotation_max_iterations=100,
+    rotation_cost_threshold=1e-12,
+):
+    assert xyz.shape == xyz_target.shape
+    import teaserpp_python
+
+    # Populating the parameters
+    solver_params = teaserpp_python.RobustRegistrationSolver.Params()
+    solver_params.cbar2 = cbar2
+    solver_params.noise_bound = noise_bound
+    solver_params.estimate_scaling = False
+    solver_params.rotation_estimation_algorithm = (
+        teaserpp_python.RobustRegistrationSolver.ROTATION_ESTIMATION_ALGORITHM.GNC_TLS
+    )
+    solver_params.rotation_gnc_factor = rotation_gnc_factor
+    solver_params.rotation_max_iterations = rotation_max_iterations
+    solver_params.rotation_cost_threshold = rotation_cost_threshold
+
+    solver = teaserpp_python.RobustRegistrationSolver(solver_params)
+
+    solver.solve(xyz.detach().cpu().numpy(), xyz_target.detach().cpu().numpy())
+
+    solution = solver.getSolution()
+    T_res = torch.eye(4, device=xyz.device)
+    T_res[:3, :3] = torch.from_numpy(solution.rotation).to(xyz.device)
+    T_res[:3, 3] = torch.from_numpy(solution.translation).to(xyz.device)
+    return T_res
+
+
 def compute_hit_ratio(xyz, xyz_target, T_gt, tau_1):
     """
     compute proportion of point which are close.
