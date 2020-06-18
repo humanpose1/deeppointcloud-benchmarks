@@ -80,7 +80,7 @@ def compute_mean_correct_matches(dist, list_tau, is_leq=True):
     return res
 
 
-def pair_evaluation(path_descr_source, path_descr_target, gt_trans, list_tau, res_path):
+def pair_evaluation(path_descr_source, path_descr_target, gt_trans, list_tau, res_path, sym=True):
     """
     save matches (indices)
     """
@@ -97,7 +97,11 @@ def pair_evaluation(path_descr_source, path_descr_target, gt_trans, list_tau, re
         feat_t = feat_t[data_target["keypoints"]]
 
     kp_source, kp_target = compute_matches(
-        feat_s, feat_t, data_source["pcd"][data_source["keypoints"]], data_target["pcd"][data_target["keypoints"]],
+        feat_s,
+        feat_t,
+        data_source["pcd"][data_source["keypoints"]],
+        data_target["pcd"][data_target["keypoints"]],
+        sym=sym,
     )
 
     dist = compute_dists(kp_source, kp_target, gt_trans)

@@ -72,7 +72,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, output_path, cfg):
                     with torch.no_grad():
                         model.set_input(data, device)
                         model.forward()
-                        features.append(model.get_output().cpu())
+                        features.append(model.get_output()[0].cpu())
             features = torch.cat(features, 0).numpy()
             log.info("save {} from {} in  {}".format(pc_name, scene_name, output_path))
             save(output_path, scene_name, pc_name, dataset.base_dataset[i].to("cpu"), features)
@@ -90,7 +90,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, output_path, cfg):
                 with torch.no_grad():
                     model.set_input(data, device)
                     model.forward()
-                    features = model.get_output()  # batch of 1
+                    features, _ = model.get_output()  # batch of 1
                     save(output_path, scene_name, pc_name, data.to("cpu"), features.to("cpu"))
 
 
