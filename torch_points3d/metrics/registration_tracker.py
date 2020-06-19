@@ -144,7 +144,7 @@ it measures loss, feature match recall, hit ratio, rotation error, translation e
                 self._trans_error.add(trans_error.item())
                 self._rot_error.add(rot_error.item())
                 self._rre.add(rot_error.item() < self.rot_thresh)
-                self._rte.add(rot_error.item() < self.trans_thresh)
+                self._rte.add(trans_error.item() < self.trans_thresh)
 
     def get_metrics(self, verbose=False):
         metrics = super().get_metrics(verbose)

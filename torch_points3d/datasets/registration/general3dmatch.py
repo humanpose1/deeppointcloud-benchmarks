@@ -14,6 +14,7 @@ from torch_points3d.metrics.registration_tracker import FragmentRegistrationTrac
 from torch_points3d.datasets.registration.base_siamese_dataset import BaseSiameseDataset
 from torch_points3d.datasets.registration.base_siamese_dataset import GeneralFragment
 from torch_points3d.datasets.registration.utils import compute_overlap_and_matches
+from torch_points3d.datasets.registration.test3dmatch import TestPair3DMatch
 
 
 
@@ -289,6 +290,7 @@ class General3DMatchDataset(BaseSiameseDataset):
         super().__init__(dataset_opt)
         pre_transform = self.pre_transform
         train_transform = self.train_transform
+        val_transform = self.val_transform
         test_transform = self.test_transform
         pre_filter = self.pre_filter
         test_pre_filter = getattr(self, "test_pre_filter", None)
@@ -323,7 +325,7 @@ class General3DMatchDataset(BaseSiameseDataset):
                 limit_size=dataset_opt.limit_size,
                 depth_thresh=dataset_opt.depth_thresh,
                 pre_transform=pre_transform,
-                transform=test_transform,
+                transform=val_transform,
                 num_random_pt=dataset_opt.num_random_pt,
                 is_offline=dataset_opt.is_offline,
                 pre_filter=test_pre_filter,
@@ -358,10 +360,16 @@ class General3DMatchDataset(BaseSiameseDataset):
                 limit_size=dataset_opt.limit_size,
                 depth_thresh=dataset_opt.depth_thresh,
                 pre_transform=pre_transform,
-                transform=test_transform,
+                transform=val_transform,
                 is_online_matching=False,
                 num_pos_pairs=dataset_opt.num_pos_pairs,
                 self_supervised=False,
+            )
+            self.test_dataset = TestPair3DMatch(
+                root=self._data_path,
+                pre_transform=pre_transform,
+                transform=test_transform,
+                num_pos_pairs=50,
             )
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):

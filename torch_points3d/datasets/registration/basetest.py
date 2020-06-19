@@ -6,6 +6,7 @@ import os.path as osp
 from plyfile import PlyData
 import shutil
 import torch
+import re
 
 from torch_geometric.data import Dataset, download_url, extract_zip
 from torch_geometric.data import Data
@@ -23,6 +24,34 @@ from torch_points3d.datasets.registration.utils import PatchExtractor
 log = logging.getLogger(__name__)
 
 
+def find_int(path):
+    number = re.findall("\d+", path)[0]
+    return int(number)
+
+
+def read_gt_log(path):
+    """
+    read the gt.log of evaluation set of 3DMatch or ETH Dataset and parse it.
+    """
+    list_pair = []
+    list_mat = []
+    with open(path, "r") as f:
+        all_mat = f.readlines()
+    mat = np.zeros((4, 4))
+    for i in range(len(all_mat)):
+        if i % 5 == 0:
+            if i != 0:
+                list_mat.append(mat)
+            mat = np.zeros((4, 4))
+            list_pair.append(list(map(int, all_mat[i].split("\t")[:-1])))
+        else:
+            line = all_mat[i].split("\t")
+
+            mat[i % 5 - 1] = np.asarray(line[:4], dtype=np.float)
+    list_mat.append(mat)
+    return list_pair, list_mat
+
+
 class SimplePatch(torch.utils.data.Dataset):
 
     def __init__(self, list_patches, transform=None):
@@ -34,7 +63,6 @@ class SimplePatch(torch.utils.data.Dataset):
         else:
             self.list_patches = [transform(p) for p in list_patches]
         self.transform = transform
-
 
     def __len__(self):
         return len(self.list_patches)
@@ -57,14 +85,12 @@ class BaseTest(Dataset):
                  pre_transform=None,
                  pre_filter=None,
                  verbose=False,
-                 debug=False,
-                 num_random_pt=5000):
+                 debug=False,):
         """
         a baseDataset that download a dataset,
         apply preprocessing, and compute keypoints
         """
 
-        self.num_random_pt = num_random_pt
         super(BaseTest, self).__init__(root,
                                        transform,
                                        pre_transform,
@@ -105,8 +131,13 @@ class BaseTest(Dataset):
 
             for i, f_p in enumerate(list_fragment_path):
                 fragment_path = osp.join(fragment_dir, f_p)
-                out_path = osp.join(out_dir, 'fragment_{:06d}.pt'.format(ind))
-
+                out_dir = osp.join(self.processed_dir,
+                                   'fragment', scene_path)
+                if files_exist([out_dir]):  # pragma: no cover
+                    return
+                makedirs(out_dir)
+                out_path = osp.join(out_dir,
+                                    'fragment_{:06d}.pt'.format(find_int(f_p)))
                 # read ply file
                 with open(fragment_path, 'rb') as f:
                     data = PlyData.read(f)
@@ -126,8 +157,37 @@ class BaseTest(Dataset):
         with open(osp.join(out_dir, 'table.json'), 'w') as f:
             json.dump(self.table, f)
 
+    def _compute_matches_between_fragments(self):
+        list_scene = os.listdir(osp.join(self.raw_dir, "raw_fragment"))
+        for scene in list_scene:
+            path_log = osp.join(self.raw_dir, "raw_dir", scene, "gt.log")
+            list_pair_num, list_mat = read_gt_log(path_log)
+            for i, pair in enumerate(list_pair_num):
+                path1 = osp.join(self.processed_dir,
+                                 'fragment', scene,
+                                 'fragment_{:06d}.pt'.format(pair[0]))
+                path2 = osp.join(self.processed_dir,
+                                 'fragment', scene,
+                                 'fragment_{:06d}.pt'.format(pair[1]))
+                data1 = torch.load(path1)
+                data2 = torch.load(path2)
+                match = compute_overlap_and_matches(
+                    data1, data2, self.max_dist_overlap,
+                    trans_gt=torch.from_numpy(np.linalg.inv(list_mat[i])))
+                match['path_source'] = path1
+                match['path_target'] = path2
+                match['name_source'] = str(pair[0])
+                match['name_target'] = str(pair[1])
+                match['scene'] = scene
+                out_path = osp.join(
+                    self.processed_dir,
+                    'matches',
+                    'matches{:06d}.npy'.format(i))
+                np.save(out_path, match)
+
     def process(self):
         self._pre_transform_fragments_ply()
+        self._compute_matches_between_fragments()
 
     def __getitem__(self, idx):
         raise NotImplementedError("implement class to get patch or fragment or more")

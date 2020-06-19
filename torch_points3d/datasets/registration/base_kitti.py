@@ -185,6 +185,9 @@ class BaseKitti(Dataset):
                     data1, data2, self.max_dist_overlap)
                 match['path_source'] = path1
                 match['path_target'] = path2
+                match['name_source'] = i
+                match['name_source'] = j
+                match['scene'] = drive
                 np.save(out_path, match)
                 ind += 1
 

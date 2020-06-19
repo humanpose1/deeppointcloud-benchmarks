@@ -100,3 +100,19 @@ class GeneralFragment(object):
         batch.pair_ind = batch.pair_ind[rand_ind]
         batch.size_pair_ind = torch.tensor([num_pos_pairs])
         return batch.contiguous()
+
+    def get_name(self, idx):
+        """
+        get the name of the scene and the name of the fragments.
+        """
+
+        match = np.load(osp.join(self.path_match,
+                                 "matches{:06d}.npy".format(idx)),
+                        allow_pickle=True).item()
+        assert hasattr(match, "name_source")
+        assert hasattr(match, "name_target")
+        assert hasattr(match, "scene")
+        source = match["name_source"]
+        target = match["name_target"]
+        scene = match["scene"]
+        return scene, source, target

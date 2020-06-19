@@ -1,7 +1,28 @@
+import open3d
 import torch
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from torch_geometric.nn import knn
+
+# Open3d utilities
+
+
+def make_open3d_point_cloud(xyz, color=None):
+    pcd = open3d.geometry.PointCloud()
+    pcd.points = open3d.utility.Vector3dVector(xyz)
+    if color is not None:
+        pcd.colors = open3d.utility.Vector3dVector(color)
+    return pcd
+
+
+def make_open3d_feature(data, dim, npts):
+    feature = open3d.registration.Feature()
+    feature.resize(dim, npts)
+    feature.data = data.astype("d").transpose()
+    return feature
+
+
+# Metrics utilities and some registration algoriithms
 
 
 def compute_accuracy(embedded_ref_features, embedded_val_features):
@@ -171,6 +192,36 @@ def teaser_pp_registration(
     return T_res
 
 
+def ransac_registration(xyz, xyz_target, feat, feat_target, thresh=0.02):
+    """
+    use the ransac of open3d to compute a ground truth transfo
+    """
+    assert xyz.shape == xyz_target.shape
+    assert feat.shape == feat_target.shape
+    pcd0 = make_open3d_point_cloud(xyz.detach().cpu().nuumpy())
+    pcd1 = make_open3d_point_cloud(xyz_target.detach().cpu().numpy())
+    feat0 = make_open3d_feature(feat.detach().cpu().nuumpy(), feat.shape[1], feat.shape[0])
+    feat1 = make_open3d_feature(feat_target.detach().cpu().numpy(), feat_target.shape[1], feat_target.shape[0])
+
+    ransac_result = open3d.registration.registration_ransac_based_on_feature_matching(
+        pcd0,
+        pcd1,
+        feat0,
+        feat1,
+        thresh,
+        open3d.registration.TransformationEstimationPointToPoint(False),
+        4,
+        [
+            open3d.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
+            open3d.registration.CorrespondenceCheckerBasedOnDistance(thresh),
+        ],
+        open3d.registration.RANSACConvergenceCriteria(50000, 1000),
+    )
+    # print(ransac_result)
+    T_ransac = torch.from_numpy(ransac_result.transformation).to(xyz.device)
+    return T_ransac
+
+
 def compute_hit_ratio(xyz, xyz_target, T_gt, tau_1):
     """
     compute proportion of point which are close.
@@ -203,3 +254,80 @@ def get_matches(feat_source, feat_target, sym=False):
         return matches[mask]
     else:
         return matches
+
+
+def compute_metrics(
+    xyz,
+    xyz_target,
+    feat,
+    feat_target,
+    T_gt,
+    sym=False,
+    tau_1=0.1,
+    tau_2=0.05,
+    rot_thresh=5,
+    trans_thresh=5,
+    use_ransac=False,
+    ransac_thresh=0.02,
+    use_teaser=False,
+):
+    """
+    compute all the necessary metrics
+    compute the hit ratio,
+    compute the feat_match_ratio
+
+    using fast global registration
+    compute the translation error
+    compute the rotation error
+    compute rre, and compute the rte
+
+    using ransac
+    compute the translation error
+    compute the rotation error
+    compute rre, and compute the rte
+
+    using Teaser++
+    compute the translation error
+    compute the rotation error
+    compute rre, and compute the rtr
+
+    Parameters
+    ----------
+
+    xyz: torch tensor of size N x 3
+    xyz_target: torch tensor of size N x 3
+
+    feat: torch tensor of size N x C
+    feat_target: torch tensor of size N x C
+
+
+    T_gt; 4 x 4 matrix
+    """
+
+    res = dict()
+
+    matches_pred = get_matches(feat, feat_target, sym=sym)
+
+    hit_ratio = compute_hit_ratio(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]], T_gt, tau_1)
+    res["hit_ratio"] = hit_ratio.item()
+    res["feat_match_ratio"] = float(hit_ratio.item() > tau_2)
+
+    # fast global registration
+
+    T_fgr = fast_global_registration(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]])
+    trans_error_fgr, rot_error_fgr = compute_transfo_error(T_fgr, T_gt)
+    res["trans_error_fgr"] = trans_error_fgr.item()
+    res["rot_error_fgr"] = rot_error_fgr.item()
+    res["rre_fgr"] = float(rot_error_fgr.item() < rot_thresh)
+    res["rte_fgr"] = float(trans_error_fgr.item() < trans_thresh)
+
+    # teaser pp
+    if use_teaser:
+        T_teaser = teaser_pp_registration(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]])
+        trans_error_teaser, rot_error_teaser = compute_transfo_error(T_teaser, T_gt)
+        res["trans_error_teaser"] = trans_error_teaser.item()
+        res["rot_error_teaser"] = rot_error_teaser.item()
+        res["rre_teaser"] = float(rot_error_teaser.item() < rot_thresh)
+        res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
+
+    return res
