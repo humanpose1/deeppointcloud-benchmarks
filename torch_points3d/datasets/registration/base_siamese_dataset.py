@@ -109,9 +109,6 @@ class GeneralFragment(object):
         match = np.load(osp.join(self.path_match,
                                  "matches{:06d}.npy".format(idx)),
                         allow_pickle=True).item()
-        assert hasattr(match, "name_source")
-        assert hasattr(match, "name_target")
-        assert hasattr(match, "scene")
         source = match["name_source"]
         target = match["name_target"]
         scene = match["scene"]

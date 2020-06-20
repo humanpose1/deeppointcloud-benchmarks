@@ -23,14 +23,15 @@ class Test3DMatch(Base3DMatchTest):
                  transform=None,
                  verbose=False,
                  debug=False,
-                 num_random_pt=5000):
+                 num_random_pt=5000,
+                 max_dist_overlap=0.01):
 
         super(Test3DMatch, self).__init__(root,
                                           transform,
                                           pre_transform,
                                           pre_filter,
                                           verbose, debug,
-                                          num_random_pt)
+                                          max_dist_overlap)
         self.num_random_pt = num_random_pt
         self.radius_patch = radius_patch
         self.patch_extractor = PatchExtractor(self.radius_patch)
@@ -76,14 +77,16 @@ class TestPair3DMatch(Base3DMatchTest, GeneralFragment):
                  pre_filter=None,
                  verbose=False,
                  debug=False,
-                 num_pos_pairs=200):
-        super(Test3DMatch, self).__init__(root,
-                                          transform,
-                                          pre_transform,
-                                          pre_filter,
-                                          verbose, debug)
+                 num_pos_pairs=200,
+                 max_dist_overlap=0.01):
+        Base3DMatchTest.__init__(self, root=root,
+                                 transform=transform,
+                                 pre_transform=pre_transform,
+                                 pre_filter=pre_filter,
+                                 verbose=verbose, debug=debug,
+                                 max_dist_overlap=max_dist_overlap)
         self.num_pos_pairs = num_pos_pairs
-        self.path_match = osp.join(self.processed_dir, "matches")
+        self.path_match = osp.join(self.processed_dir, "test", "matches")
         self.list_fragment = [f for f in os.listdir(self.path_match) if "matches" in f]
         self.self_supervised = False
         self.is_online_matching = False
@@ -93,6 +96,7 @@ class TestPair3DMatch(Base3DMatchTest, GeneralFragment):
 
     def __len__(self):
         return len(self.list_fragment)
+
 
 class Test3DMatchDataset(BaseDataset):
     """

@@ -29,7 +29,7 @@ models:
         ]
       prev_grid_size:
         [
-          [in_grid_size, in_grid_size],
+          [in_grqid_size, in_grid_size],
           [in_grid_size, 2*in_grid_size],
           [2*in_grid_size, 4*in_grid_size],
           [4*in_grid_size, 8*in_grid_size],
@@ -60,7 +60,7 @@ models:
           [False, False],
         ]
       max_num_neighbors:
-        [[20, 20], [20, 20], [20, 32], [32, 32], [32, 32]]
+        [[25, 25], [25, 30], [30, 38], [38, 38], [38, 38]]
       module_name: KPDualBlock
     up_conv:
       module_name: FPModule_PD

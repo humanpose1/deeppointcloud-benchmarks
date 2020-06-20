@@ -183,7 +183,7 @@ def teaser_pp_registration(
 
     solver = teaserpp_python.RobustRegistrationSolver(solver_params)
 
-    solver.solve(xyz.detach().cpu().numpy(), xyz_target.detach().cpu().numpy())
+    solver.solve(xyz.T.detach().cpu().numpy(), xyz_target.T.detach().cpu().numpy())
 
     solution = solver.getSolution()
     T_res = torch.eye(4, device=xyz.device)
@@ -198,9 +198,9 @@ def ransac_registration(xyz, xyz_target, feat, feat_target, thresh=0.02):
     """
     assert xyz.shape == xyz_target.shape
     assert feat.shape == feat_target.shape
-    pcd0 = make_open3d_point_cloud(xyz.detach().cpu().nuumpy())
+    pcd0 = make_open3d_point_cloud(xyz.detach().cpu().numpy())
     pcd1 = make_open3d_point_cloud(xyz_target.detach().cpu().numpy())
-    feat0 = make_open3d_feature(feat.detach().cpu().nuumpy(), feat.shape[1], feat.shape[0])
+    feat0 = make_open3d_feature(feat.detach().cpu().numpy(), feat.shape[1], feat.shape[0])
     feat1 = make_open3d_feature(feat_target.detach().cpu().numpy(), feat_target.shape[1], feat_target.shape[0])
 
     ransac_result = open3d.registration.registration_ransac_based_on_feature_matching(
@@ -218,7 +218,7 @@ def ransac_registration(xyz, xyz_target, feat, feat_target, thresh=0.02):
         open3d.registration.RANSACConvergenceCriteria(50000, 1000),
     )
     # print(ransac_result)
-    T_ransac = torch.from_numpy(ransac_result.transformation).to(xyz.device)
+    T_ransac = torch.from_numpy(ransac_result.transformation).to(xyz.dtype).to(xyz.device)
     return T_ransac
 
 
@@ -250,7 +250,7 @@ def get_matches(feat_source, feat_target, sym=False):
     matches = knn(feat_target, feat_source, k=1).T
     if sym:
         match_inv = knn(feat_source, feat_target, k=1).T
-        mask = match_inv[matches[:, 1], 1] == torch.arange(matches.shape[0])
+        mask = match_inv[matches[:, 1], 1] == torch.arange(matches.shape[0], device=feat_source.device)
         return matches[mask]
     else:
         return matches
@@ -270,6 +270,7 @@ def compute_metrics(
     use_ransac=False,
     ransac_thresh=0.02,
     use_teaser=False,
+    noise_bound_teaser=0.1,
 ):
     """
     compute all the necessary metrics
@@ -323,11 +324,21 @@ def compute_metrics(
 
     # teaser pp
     if use_teaser:
-        T_teaser = teaser_pp_registration(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]])
+        T_teaser = teaser_pp_registration(
+            xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]], noise_bound=noise_bound_teaser
+        )
         trans_error_teaser, rot_error_teaser = compute_transfo_error(T_teaser, T_gt)
         res["trans_error_teaser"] = trans_error_teaser.item()
         res["rot_error_teaser"] = rot_error_teaser.item()
         res["rre_teaser"] = float(rot_error_teaser.item() < rot_thresh)
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
+
+    if use_ransac:
+        T_ransac = ransac_registration(xyz, xyz_target, feat, feat_target, ransac_thresh)
+        trans_error_ransac, rot_error_ransac = compute_transfo_error(T_ransac, T_gt)
+        res["trans_error_ransac"] = trans_error_ransac.item()
+        res["rot_error_ransac"] = rot_error_ransac.item()
+        res["rre_ransac"] = float(rot_error_ransac.item() < rot_thresh)
+        res["rte_ransac"] = float(trans_error_ransac.item() < trans_thresh)
 
     return res

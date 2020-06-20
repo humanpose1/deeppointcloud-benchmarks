@@ -85,12 +85,13 @@ class BaseTest(Dataset):
                  pre_transform=None,
                  pre_filter=None,
                  verbose=False,
-                 debug=False,):
+                 debug=False,
+                 max_dist_overlap=0.01):
         """
         a baseDataset that download a dataset,
         apply preprocessing, and compute keypoints
         """
-
+        self.max_dist_overlap = max_dist_overlap
         super(BaseTest, self).__init__(root,
                                        transform,
                                        pre_transform,
@@ -111,7 +112,7 @@ class BaseTest(Dataset):
         """
         apply pre_transform on fragments (ply) and save the results
         """
-        out_dir = osp.join(self.processed_dir,
+        out_dir = osp.join(self.processed_dir, 'test',
                            'fragment')
         if files_exist([out_dir]):  # pragma: no cover
             return
@@ -120,10 +121,10 @@ class BaseTest(Dataset):
         # table to map fragment numper with
         self.table = dict()
 
-        for scene_path in os.listdir(osp.join(self.raw_dir, "raw_fragment")):
+        for scene_path in os.listdir(osp.join(self.raw_dir, "test")):
 
             fragment_dir = osp.join(self.raw_dir,
-                                    "raw_fragment",
+                                    "test",
                                     scene_path)
             list_fragment_path = sorted([f
                                          for f in os.listdir(fragment_dir)
@@ -131,10 +132,8 @@ class BaseTest(Dataset):
 
             for i, f_p in enumerate(list_fragment_path):
                 fragment_path = osp.join(fragment_dir, f_p)
-                out_dir = osp.join(self.processed_dir,
+                out_dir = osp.join(self.processed_dir, "test",
                                    'fragment', scene_path)
-                if files_exist([out_dir]):  # pragma: no cover
-                    return
                 makedirs(out_dir)
                 out_path = osp.join(out_dir,
                                     'fragment_{:06d}.pt'.format(find_int(f_p)))
@@ -158,32 +157,40 @@ class BaseTest(Dataset):
             json.dump(self.table, f)
 
     def _compute_matches_between_fragments(self):
-        list_scene = os.listdir(osp.join(self.raw_dir, "raw_fragment"))
+        ind = 0
+        out_dir = osp.join(self.processed_dir,
+                           "test", "matches")
+        if files_exist([out_dir]):  # pragma: no cover
+            return
+        makedirs(out_dir)
+
+        list_scene = os.listdir(osp.join(self.raw_dir, "test"))
         for scene in list_scene:
-            path_log = osp.join(self.raw_dir, "raw_dir", scene, "gt.log")
+            path_log = osp.join(self.raw_dir, "test", scene, "gt.log")
             list_pair_num, list_mat = read_gt_log(path_log)
             for i, pair in enumerate(list_pair_num):
-                path1 = osp.join(self.processed_dir,
+                path1 = osp.join(self.processed_dir, "test",
                                  'fragment', scene,
                                  'fragment_{:06d}.pt'.format(pair[0]))
-                path2 = osp.join(self.processed_dir,
+                path2 = osp.join(self.processed_dir, "test",
                                  'fragment', scene,
                                  'fragment_{:06d}.pt'.format(pair[1]))
                 data1 = torch.load(path1)
                 data2 = torch.load(path2)
                 match = compute_overlap_and_matches(
                     data1, data2, self.max_dist_overlap,
-                    trans_gt=torch.from_numpy(np.linalg.inv(list_mat[i])))
+                    trans_gt=torch.from_numpy(np.linalg.inv(list_mat[i])).to(data1.pos.dtype))
                 match['path_source'] = path1
                 match['path_target'] = path2
                 match['name_source'] = str(pair[0])
                 match['name_target'] = str(pair[1])
                 match['scene'] = scene
                 out_path = osp.join(
-                    self.processed_dir,
+                    self.processed_dir, "test",
                     'matches',
-                    'matches{:06d}.npy'.format(i))
+                    'matches{:06d}.npy'.format(ind))
                 np.save(out_path, match)
+                ind += 1
 
     def process(self):
         self._pre_transform_fragments_ply()
@@ -201,7 +208,7 @@ class Base3DMatchTest(BaseTest):
                  pre_filter=None,
                  verbose=False,
                  debug=False,
-                 num_random_pt=5000):
+                 max_dist_overlap=0.01):
         """
         Base 3D Match but for testing
         """
@@ -214,10 +221,13 @@ class Base3DMatchTest(BaseTest):
                                               pre_filter,
                                               verbose,
                                               debug,
-                                              num_random_pt)
+                                              max_dist_overlap)
 
     def download(self):
-        folder_test = osp.join(self.raw_dir, 'raw_fragment')
+        folder_test = osp.join(self.raw_dir, 'test')
+        if files_exist([folder_test]):  # pragma: no cover
+            log.warning("already downloaded {}".format('test'))
+            return
         for url_raw in self.list_urls_test:
             url = url_raw.split('\n')[0]
             path = download_url(url, folder_test)
@@ -243,19 +253,20 @@ class BaseETHTest(BaseTest):
                  pre_filter=None,
                  verbose=False,
                  debug=False,
-                 num_random_pt=5000):
+                 num_random_pt=5000,
+                 max_dist_overlap=0.01):
         """
         Base for ETH Dataset. The main goal is to see
         if the descriptors generalize well.
         """
-
+        self.num_random_pt = num_random_pt
         super(BaseTest, self).__init__(root,
                                        transform,
                                        pre_transform,
                                        pre_filter,
                                        verbose,
                                        debug,
-                                       num_random_pt)
+                                       max_dist_overlap)
 
     def download(self):
         pass
