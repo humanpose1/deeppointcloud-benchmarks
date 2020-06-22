@@ -62,17 +62,20 @@ class GeneralFragment(object):
             else:
                 data_source = torch.load(match["path_target"]).to(torch.float)
                 data_target = torch.load(match["path_target"]).to(torch.float)
-            pos = data_source.pos
-            i = torch.randint(0, len(pos))
-            size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block
-            point = pos[i].view(1, 3)
-            ind, dist = ball_query(point,
-                                   pos,
-                                   radius=size_block,
-                                   max_num=-1,
-                                   mode=1)
-            _, col = ind[dist[:, 0] > 0].t()
-            new_pair = torch.stack((col, col)).T
+            len_col = 0
+            while(len_col < self.num_pos_pairs):
+                pos = data_source.pos
+                i = torch.randint(0, len(pos), (1,))
+                size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block
+                point = pos[i].view(1, 3)
+                ind, dist = ball_query(point,
+                                       pos,
+                                       radius=size_block,
+                                       max_num=-1,
+                                       mode=1)
+                _, col = ind[dist[:, 0] > 0].t()
+                len_col = len(col)
+                new_pair = torch.stack((col, col)).T
 
 
         if self.transform is not None:

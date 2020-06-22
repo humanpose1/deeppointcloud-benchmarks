@@ -334,11 +334,15 @@ def compute_metrics(
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
 
     if use_ransac:
-        T_ransac = ransac_registration(xyz, xyz_target, feat, feat_target, ransac_thresh)
-        trans_error_ransac, rot_error_ransac = compute_transfo_error(T_ransac, T_gt)
-        res["trans_error_ransac"] = trans_error_ransac.item()
-        res["rot_error_ransac"] = rot_error_ransac.item()
-        res["rre_ransac"] = float(rot_error_ransac.item() < rot_thresh)
-        res["rte_ransac"] = float(trans_error_ransac.item() < trans_thresh)
+        try:
+            T_ransac = ransac_registration(xyz, xyz_target, feat, feat_target, ransac_thresh)
+            trans_error_ransac, rot_error_ransac = compute_transfo_error(T_ransac, T_gt)
+            res["trans_error_ransac"] = trans_error_ransac.item()
+            res["rot_error_ransac"] = rot_error_ransac.item()
+            res["rre_ransac"] = float(rot_error_ransac.item() < rot_thresh)
+            res["rte_ransac"] = float(trans_error_ransac.item() < trans_thresh)
+        except:
+            print("Warning !!")
+            print(xyz.shape, xyz_target.shape)
 
     return res
