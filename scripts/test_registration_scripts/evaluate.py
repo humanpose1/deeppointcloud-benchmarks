@@ -30,7 +30,14 @@ from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
 log = logging.getLogger(__name__)
 
 
-def run(model: BaseModel, dataset: BaseDataset, device, output_path, cfg):
+def torch2o3d(xyz, color=[1, 0, 0]):
+    pcd = open3d.geometry.PointCloud()
+    pcd.points = open3d.utility.Vector3dVector(xyz.detach().cpu().numpy())
+    pcd.paint_uniform_color(color)
+    return pcd
+
+
+def run(model: BaseModel, dataset: BaseDataset, device, cfg):
     dataset.create_dataloaders(
         model, 1, False, cfg.training.num_workers, False,
     )
@@ -72,11 +79,16 @@ def run(model: BaseModel, dataset: BaseDataset, device, output_path, cfg):
                 res = dict(**res, **metric)
                 print(res)
                 list_res.append(res)
+                # pcd = torch2o3d(input.pos, color=[1,0,0])
+                # pcd_t = torch2o3d(input_target.pos, color=[0,1,0])
+                # open3d.visualization.draw_geometries([pcd, pcd_t])
+                # open3d.visualization.draw_geometries([pcd.transform(T_gt.detach().cpu().numpy()),pcd_t])
     df = pd.DataFrame(list_res)
     output_path = os.path.join(cfg.training.checkpoint_dir, cfg.data.name, "matches")
     if not os.path.exists(output_path):
         os.makedirs(output_path, exist_ok=True)
     df.to_csv(osp.join(output_path, "final_res.csv"))
+    print(df.groupby("name_scene").mean())
 
 
 @hydra.main(config_path="../../conf/config.yaml")
@@ -108,12 +120,7 @@ def main(cfg):
         model.enable_dropout_in_eval()
     model = model.to(device)
 
-    # Run training / evaluation
-    output_path = os.path.join(cfg.training.checkpoint_dir, cfg.data.name, "features")
-    if not os.path.exists(output_path):
-        os.makedirs(output_path, exist_ok=True)
-
-    run(model, dataset, device, output_path, cfg)
+    run(model, dataset, device, cfg)
 
 
 if __name__ == "__main__":

@@ -229,7 +229,7 @@ def compute_hit_ratio(xyz, xyz_target, T_gt, tau_1):
     assert xyz.shape == xyz.shape
     dist = torch.norm(xyz.mm(T_gt[:3, :3].T) + T_gt[:3, 3] - xyz_target, dim=1)
 
-    return torch.mean((dist < 0.1).to(torch.float))
+    return torch.mean((dist < tau_1).to(torch.float))
 
 
 def compute_transfo_error(T_gt, T_pred):
