@@ -208,7 +208,7 @@ class Trainer:
             if self.has_visualization:
                 self._visualizer.reset(epoch, stage_name)
             if not self._dataset.has_labels(stage_name) and not self.tracker_options.get(
-                "make_submission", False
+                "make_submission_{}".format(stage_name), False
             ):  # No label, no submission -> do nothing
                 log.warning("No forward will be run on dataset %s." % stage_name)
                 continue

@@ -62,8 +62,11 @@ class GeneralFragment(object):
             else:
                 data_source = torch.load(match["path_target"]).to(torch.float)
                 data_target = torch.load(match["path_target"]).to(torch.float)
+            if(self.ss_transform is not None):
+                data_source = self.ss_transform(data_source)
+                data_target = self.ss_transform(data_target)
             len_col = 0
-            while(len_col < self.num_pos_pairs):
+            while(len_col < self.min_points):
                 pos = data_source.pos
                 i = torch.randint(0, len(pos), (1,))
                 size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block

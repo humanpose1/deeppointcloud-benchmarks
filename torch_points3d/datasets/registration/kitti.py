@@ -33,7 +33,8 @@ class FragmentKitti(BaseKitti, GeneralFragment):
                  pre_filter=None,
                  is_online_matching=False,
                  num_pos_pairs=1024,
-                 ss_transform=None):
+                 ss_transform=None,
+                 min_points=300):
         BaseKitti.__init__(self,
                            root,
                            mode,
@@ -52,6 +53,7 @@ class FragmentKitti(BaseKitti, GeneralFragment):
         self.min_size_block = min_size_block
         self.max_size_block = max_size_block
         self.ss_transform = ss_transform
+        self.min_points = min_points
 
     def get(self, idx):
         return self.get_fragment(idx)
@@ -87,7 +89,8 @@ class KittiDataset(BaseSiameseDataset):
             transform=train_transform,
             pre_filter=pre_filter,
             is_online_matching=dataset_opt.is_online_matching,
-            num_pos_pairs=dataset_opt.num_pos_pairs)
+            num_pos_pairs=dataset_opt.num_pos_pairs,
+            min_points=dataset_opt.min_points)
 
         self.val_dataset = FragmentKitti(
             root=self._data_path,
