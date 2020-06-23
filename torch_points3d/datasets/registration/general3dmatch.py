@@ -248,6 +248,7 @@ class Fragment3DMatch(Base3DMatch, GeneralFragment):
             self_supervised=False,
             min_size_block=0.3,
             max_size_block=2,
+            ss_transform=None,
     ):
 
         self.is_patch = False
@@ -277,6 +278,7 @@ class Fragment3DMatch(Base3DMatch, GeneralFragment):
         self.self_supervised = self_supervised
         self.min_size_block = min_size_block
         self.max_size_block = max_size_block
+        self.ss_transform = ss_transform
 
     def get(self, idx):
         return self.get_fragment(idx)
@@ -288,7 +290,9 @@ class Fragment3DMatch(Base3DMatch, GeneralFragment):
 class General3DMatchDataset(BaseSiameseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
+
         pre_transform = self.pre_transform
+        ss_transform = self.ss_transform
         train_transform = self.train_transform
         val_transform = self.val_transform
         test_transform = self.test_transform
@@ -348,7 +352,8 @@ class General3DMatchDataset(BaseSiameseDataset):
                 num_pos_pairs=dataset_opt.num_pos_pairs,
                 self_supervised=dataset_opt.self_supervised,
                 min_size_block=dataset_opt.min_size_block,
-                max_size_block=dataset_opt.max_size_block,)
+                max_size_block=dataset_opt.max_size_block,
+                ss_transform=ss_transform,)
 
             self.val_dataset = Fragment3DMatch(
                 root=self._data_path,

@@ -32,7 +32,8 @@ class FragmentKitti(BaseKitti, GeneralFragment):
                  pre_transform=None,
                  pre_filter=None,
                  is_online_matching=False,
-                 num_pos_pairs=1024):
+                 num_pos_pairs=1024,
+                 ss_transform=None):
         BaseKitti.__init__(self,
                            root,
                            mode,
@@ -50,6 +51,7 @@ class FragmentKitti(BaseKitti, GeneralFragment):
         self.self_supervised = self_supervised
         self.min_size_block = min_size_block
         self.max_size_block = max_size_block
+        self.ss_transform = ss_transform
 
     def get(self, idx):
         return self.get_fragment(idx)
@@ -63,6 +65,7 @@ class KittiDataset(BaseSiameseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         pre_transform = self.pre_transform
+        ss_transform = self.ss_transform
         train_transform = self.train_transform
         test_transform = self.test_transform
         pre_filter = self.pre_filter
@@ -79,6 +82,7 @@ class KittiDataset(BaseSiameseDataset):
             max_dist_overlap=dataset_opt.max_dist_overlap,
             max_time_distance=dataset_opt.max_time_distance,
             min_dist=dataset_opt.min_dist,
+            ss_transform=ss_transform,
             pre_transform=pre_transform,
             transform=train_transform,
             pre_filter=pre_filter,
