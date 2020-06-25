@@ -57,16 +57,21 @@ class GeneralFragment(object):
             new_pair = torch.from_numpy(match["pair"])
         else:
             if(random.random() < 0.5):
-                data_source = torch.load(match["path_source"]).to(torch.float)
-                data_target = torch.load(match["path_source"]).to(torch.float)
+                data_source_o = torch.load(match["path_source"]).to(torch.float)
+                data_target_o = torch.load(match["path_source"]).to(torch.float)
             else:
-                data_source = torch.load(match["path_target"]).to(torch.float)
-                data_target = torch.load(match["path_target"]).to(torch.float)
-            if(self.ss_transform is not None):
-                data_source = self.ss_transform(data_source)
-                data_target = self.ss_transform(data_target)
+                data_source_o = torch.load(match["path_target"]).to(torch.float)
+                data_target_o = torch.load(match["path_target"]).to(torch.float)
+
             len_col = 0
+
             while(len_col < self.min_points):
+                if(self.ss_transform is not None):
+                    data_source = self.ss_transform(data_source_o.clone())
+                    data_target = self.ss_transform(data_target_o.clone())
+                else:
+                    data_source = data_source_o
+                    data_target = data_target_o
                 pos = data_source.pos
                 i = torch.randint(0, len(pos), (1,))
                 size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block
@@ -77,9 +82,17 @@ class GeneralFragment(object):
                                        max_num=-1,
                                        mode=1)
                 _, col = ind[dist[:, 0] > 0].t()
-                len_col = len(col)
-                new_pair = torch.stack((col, col)).T
 
+                ind_t, dist_t = ball_query(data_target.pos,
+                                           pos[col],
+                                           radius=self.max_dist_overlap,
+                                           max_num=1,
+                                           mode=1)
+                col_target, ind_col = ind_t[dist_t[:, 0] > 0].t()
+                col = col[ind_col]
+
+                new_pair = torch.stack((col, col_target)).T
+                len_col = len(new_pair)
 
         if self.transform is not None:
             data_source = self.transform(data_source)
@@ -105,6 +118,8 @@ class GeneralFragment(object):
         rand_ind = torch.randperm(len(batch.pair_ind))[:num_pos_pairs]
         batch.pair_ind = batch.pair_ind[rand_ind]
         batch.size_pair_ind = torch.tensor([num_pos_pairs])
+        if(len(batch.pair_ind) == 0):
+            print("Warning")
         return batch.contiguous()
 
     def get_name(self, idx):

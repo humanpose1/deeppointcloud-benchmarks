@@ -67,7 +67,7 @@ class KittiDataset(BaseSiameseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         pre_transform = self.pre_transform
-        ss_transform = self.ss_transform
+        self.ss_transform = getattr(self, "ss_transform", None)
         train_transform = self.train_transform
         test_transform = self.test_transform
         pre_filter = self.pre_filter

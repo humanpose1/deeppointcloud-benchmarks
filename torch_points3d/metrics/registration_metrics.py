@@ -1,4 +1,3 @@
-import open3d
 import torch
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
@@ -7,19 +6,19 @@ from torch_geometric.nn import knn
 # Open3d utilities
 
 
-def make_open3d_point_cloud(xyz, color=None):
-    pcd = open3d.geometry.PointCloud()
-    pcd.points = open3d.utility.Vector3dVector(xyz)
-    if color is not None:
-        pcd.colors = open3d.utility.Vector3dVector(color)
-    return pcd
+# def make_open3d_point_cloud(xyz, color=None):
+#     pcd = open3d.geometry.PointCloud()
+#     pcd.points = open3d.utility.Vector3dVector(xyz)
+#     if color is not None:
+#         pcd.colors = open3d.utility.Vector3dVector(color)
+#     return pcd
 
 
-def make_open3d_feature(data, dim, npts):
-    feature = open3d.registration.Feature()
-    feature.resize(dim, npts)
-    feature.data = data.astype("d").transpose()
-    return feature
+# def make_open3d_feature(data, dim, npts):
+#     feature = open3d.registration.Feature()
+#     feature.resize(dim, npts)
+#     feature.data = data.astype("d").transpose()
+#     return feature
 
 
 # Metrics utilities and some registration algoriithms
@@ -192,34 +191,34 @@ def teaser_pp_registration(
     return T_res
 
 
-def ransac_registration(xyz, xyz_target, feat, feat_target, thresh=0.02):
-    """
-    use the ransac of open3d to compute a ground truth transfo
-    """
-    assert xyz.shape == xyz_target.shape
-    assert feat.shape == feat_target.shape
-    pcd0 = make_open3d_point_cloud(xyz.detach().cpu().numpy())
-    pcd1 = make_open3d_point_cloud(xyz_target.detach().cpu().numpy())
-    feat0 = make_open3d_feature(feat.detach().cpu().numpy(), feat.shape[1], feat.shape[0])
-    feat1 = make_open3d_feature(feat_target.detach().cpu().numpy(), feat_target.shape[1], feat_target.shape[0])
+# def ransac_registration(xyz, xyz_target, feat, feat_target, thresh=0.02):
+#     """
+#     use the ransac of open3d to compute a ground truth transfo
+#     """
+#     assert xyz.shape == xyz_target.shape
+#     assert feat.shape == feat_target.shape
+#     pcd0 = make_open3d_point_cloud(xyz.detach().cpu().numpy())
+#     pcd1 = make_open3d_point_cloud(xyz_target.detach().cpu().numpy())
+#     feat0 = make_open3d_feature(feat.detach().cpu().numpy(), feat.shape[1], feat.shape[0])
+#     feat1 = make_open3d_feature(feat_target.detach().cpu().numpy(), feat_target.shape[1], feat_target.shape[0])
 
-    ransac_result = open3d.registration.registration_ransac_based_on_feature_matching(
-        pcd0,
-        pcd1,
-        feat0,
-        feat1,
-        thresh,
-        open3d.registration.TransformationEstimationPointToPoint(False),
-        4,
-        [
-            open3d.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
-            open3d.registration.CorrespondenceCheckerBasedOnDistance(thresh),
-        ],
-        open3d.registration.RANSACConvergenceCriteria(50000, 1000),
-    )
-    # print(ransac_result)
-    T_ransac = torch.from_numpy(ransac_result.transformation).to(xyz.dtype).to(xyz.device)
-    return T_ransac
+#     ransac_result = open3d.registration.registration_ransac_based_on_feature_matching(
+#         pcd0,
+#         pcd1,
+#         feat0,
+#         feat1,
+#         thresh,
+#         open3d.registration.TransformationEstimationPointToPoint(False),
+#         4,
+#         [
+#             open3d.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
+#             open3d.registration.CorrespondenceCheckerBasedOnDistance(thresh),
+#         ],
+#         open3d.registration.RANSACConvergenceCriteria(50000, 1000),
+#     )
+#     # print(ransac_result)
+#     T_ransac = torch.from_numpy(ransac_result.transformation).to(xyz.dtype).to(xyz.device)
+#     return T_ransac
 
 
 def compute_hit_ratio(xyz, xyz_target, T_gt, tau_1):
@@ -334,15 +333,16 @@ def compute_metrics(
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
 
     if use_ransac:
-        try:
-            T_ransac = ransac_registration(xyz, xyz_target, feat, feat_target, ransac_thresh)
-            trans_error_ransac, rot_error_ransac = compute_transfo_error(T_ransac, T_gt)
-            res["trans_error_ransac"] = trans_error_ransac.item()
-            res["rot_error_ransac"] = rot_error_ransac.item()
-            res["rre_ransac"] = float(rot_error_ransac.item() < rot_thresh)
-            res["rte_ransac"] = float(trans_error_ransac.item() < trans_thresh)
-        except:
-            print("Warning !!")
-            print(xyz.shape, xyz_target.shape)
+        raise NotImplementedError
+        # try:
+        #     T_ransac = ransac_registration(xyz, xyz_target, feat, feat_target, ransac_thresh)
+        #     trans_error_ransac, rot_error_ransac = compute_transfo_error(T_ransac, T_gt)
+        #     res["trans_error_ransac"] = trans_error_ransac.item()
+        #     res["rot_error_ransac"] = rot_error_ransac.item()
+        #     res["rre_ransac"] = float(rot_error_ransac.item() < rot_thresh)
+        #     res["rte_ransac"] = float(trans_error_ransac.item() < trans_thresh)
+        # except:
+        #     print("Warning !!")
+        #     print(xyz.shape, xyz_target.shape)
 
     return res

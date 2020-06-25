@@ -224,3 +224,23 @@ class ElasticDistortion:
         return "{}(apply_distorsion={}, granularity={})".format(
             self.__class__.__name__, self._apply_distorsion, self._granularity
         )
+
+
+class RandomGridSampling3D(object):
+
+    def __init__(self, min_sampling=0.1, max_sampling=0.4, mode="last"):
+        self.min_sampling = min_sampling
+        self.max_sampling = max_sampling
+        self.mode = mode
+
+    def __call__(self, data):
+        size = np.random.rand() * (self.max_sampling - self.min_sampling) + self.min_sampling
+        grid_sampling = GridSampling3D(
+            size=size, mode=self.mode, quantize_coords=False)
+        return grid_sampling(data)
+
+    def __repr__(self):
+        return "{}(min_sampling={}, max_sampling={}, mode={})".format(
+            self.__class__.__name__, self.min_sampling,
+            self.max_sampling, self.mode
+        )

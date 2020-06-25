@@ -552,7 +552,7 @@ class RandomDropout:
         )
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def rw_mask(pos, ind, dist, mask_vertices, random_ratio=0.04, num_iter=5000):
     rand_ind = np.random.randint(0, len(pos))
     for _ in range(num_iter):
@@ -609,3 +609,59 @@ class RandomWalkDropout(object):
 
     def __repr__(self):
         return "{}(dropout_ratio={}, num_iter={}, radius={}, max_num={})".format(self.__class__.__name__, self.dropout_ratio, self.num_iter, self.radius, self.max_num)
+
+
+class SphereDropout(object):
+    """
+    drop out of points on random spheres of fixed radius
+    Parameters
+    ----------
+    num_sphere: int, optional
+        number of random spheres
+    radius: float, optional
+        radius of the spheres
+    """
+    def __init__(self, num_sphere=10, radius=5):
+        self.num_sphere = num_sphere
+        self.radius = radius
+
+    def __call__(self, data):
+
+        pos = data.pos
+        list_ind = torch.randint(0, len(pos), (self.num_sphere, ))
+
+        ind, dist = ball_query(data.pos, data.pos[list_ind],
+                               radius=self.radius,
+                               max_num=-1, mode=1)
+        ind = ind[dist[:, 0] > 0]
+        mask = torch.ones(len(pos), dtype=torch.bool)
+        mask[ind[:, 0]] = False
+        data.pos = pos[mask]
+        return data
+
+    def __repr__(self):
+        return "{}(num_sphere={}, radius={})".format(
+            self.__class__.__name__, self.num_sphere, self.radius)
+
+
+class SphereCrop(object):
+    """
+    crop the point cloud on a sphere
+    """
+
+    def __init__(self, radius=50):
+        self.radius = radius
+
+    def __call__(self, data):
+        i = torch.randint(0, len(data.pos), (1, ))
+        ind, dist = ball_query(data.pos,
+                               data.pos[i].view(1, 3),
+                               radius=self.radius,
+                               max_num=-1, mode=1)
+        ind = ind[dist[:, 0] > 0]
+        data.pos = data.pos[ind[:, 0]]
+        return data
+
+    def __repr__(self):
+        return "{}(radius={})".format(
+            self.__class__.__name__, self.radius)
