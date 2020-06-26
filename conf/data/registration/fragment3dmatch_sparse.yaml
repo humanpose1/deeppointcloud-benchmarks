@@ -12,7 +12,11 @@ data:
   depth_thresh: 4.5
   first_subsampling: 0.02
   is_online_matching: False
+  self_supervised: false
+  min_size_block: 0.5
+  max_size_block: 1
   num_pos_pairs: 30000
+  min_points: 400
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
