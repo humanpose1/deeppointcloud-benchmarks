@@ -364,6 +364,9 @@ class RandomScaleAnisotropic:
     def __call__(self, data):
         scale = self.scales[0] + torch.rand((3,)) * (self.scales[1] - self.scales[0])
         data.pos = data.pos * scale
+        if(data.norm is not None):
+            data.norm = data.norm / scale
+            data.norm = torch.nn.functional.normalize(data.norm, dim=1)
         return data
 
     def __repr__(self):
@@ -604,7 +607,9 @@ class RandomWalkDropout(object):
                        mask,
                        num_iter=self.num_iter,
                        random_ratio=self.dropout_ratio)
-        data.pos = data.pos[mask]
+        for k in data.keys:
+            if(len(data.pos) == len(data[k])):
+                data[k] = data[k][mask]
         return data
 
     def __repr__(self):
@@ -636,7 +641,10 @@ class SphereDropout(object):
         ind = ind[dist[:, 0] > 0]
         mask = torch.ones(len(pos), dtype=torch.bool)
         mask[ind[:, 0]] = False
-        data.pos = pos[mask]
+        for k in data.keys:
+            if(len(data.pos) == len(data[k])):
+                data[k] = data[k][mask]
+
         return data
 
     def __repr__(self):
@@ -659,9 +667,33 @@ class SphereCrop(object):
                                radius=self.radius,
                                max_num=-1, mode=1)
         ind = ind[dist[:, 0] > 0]
-        data.pos = data.pos[ind[:, 0]]
+        for k in data.keys:
+            if(len(data.pos) == len(data[k])):
+                data[k] = data[k][ind[:, 0]]
+
         return data
 
     def __repr__(self):
         return "{}(radius={})".format(
             self.__class__.__name__, self.radius)
+
+
+def NormalEstimation(object):
+    """
+    Estimation of normal using PCA (open3d implementation)
+    with hybrid
+    """
+
+    def __init__(self, radius_nn=0.1, max_nn=38):
+        self.radius_nn = radius_nn
+        self.max_nn = 38
+
+    def __call__(self, data):
+        import open3d
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(data.pos.cpu().numpy())
+        pcd.estimate_normals(
+            search_param=open3d.geometry.KDTreeSearchParamHybrid(
+                radius=self.radius_nn, max_nn=self.max_nn))
+        data.norm = torch.from_numpy(np.asarray(pcd.normals))
+        return data

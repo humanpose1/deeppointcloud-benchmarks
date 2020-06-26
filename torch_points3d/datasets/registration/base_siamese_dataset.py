@@ -67,8 +67,12 @@ class GeneralFragment(object):
 
             while(len_col < self.min_points):
                 if(self.ss_transform is not None):
-                    data_source = self.ss_transform(data_source_o.clone())
-                    data_target = self.ss_transform(data_target_o.clone())
+                    n1 = np.random.randint(0, len(self.ss_transform.transforms))
+                    t1 = self.ss_transform.transforms[n1]
+                    n2 = np.random.randint(0, len(self.ss_transform.transforms))
+                    t2 = self.ss_transform.transforms[n2]
+                    data_source = t1(data_source_o.clone())
+                    data_target = t2(data_target_o.clone())
                 else:
                     data_source = data_source_o
                     data_target = data_target_o

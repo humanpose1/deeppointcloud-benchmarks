@@ -8,6 +8,9 @@ from torch_points3d.datasets.segmentation import IGNORE_LABEL
 
 log = logging.getLogger(__name__)
 
+from torch_points3d.core.common_modules import FastBatchNorm1d, Seq
+from torch_points3d.core.common_modules import MLP
+
 
 class VoteNetModel(BaseModel):
     __REQUIRED_DATA__ = [
