@@ -1,6 +1,6 @@
 import torch
 from torch_geometric.data import Data
-
+from torch_geometric.nn import global_mean_pool
 
 from torch_points3d.models.registration.base import FragmentBaseModel
 from torch_points3d.models.base_model import BaseModel
@@ -89,7 +89,9 @@ class BaseSSFM(BaseModel):
             raise NotImplementedError("The mode for the loss is incorrect")
 
     def compute_normal_loss(self):
-        self.normal_loss = 0
+        loss = torch.sum(torch.abs(self.normal * self.input.norm), dim=1).mean()
+        loss_target = torch.sum(torch.abs(self.normal_target * self.input_target.norm), dim=1).mean()
+        self.normal_loss = 2 - loss - loss_target
 
     def set_input(self, data, device):
         self.input, self.input_target = data.to_data()
@@ -97,17 +99,24 @@ class BaseSSFM(BaseModel):
         self.input_target = self.input_target.to(device)
         self.match = data.pair_ind.to(torch.long).to(device)
         self.size_match = data.size_pair_ind.to(torch.long).to(device)
-        self.xyz = torch.stack((data.pos_x, data.pos_y, data.pos_z), 0).T.to(device)
-        self.xyz_target = torch.stack((data.pos_x_target, data.pos_y_target, data.pos_z_target), 0).T.to(device)
+        self.xyz = self.input.pos.to(device)
+        self.xyz_target = self.input_target.pos.to(device)
 
     def forward(self):
         feature = self.backbone_model.forward(self.input)
+        global_feature = global_mean_pool(self.backbone_model.down[-1].F, self.backbone_model.down[-1].C[:, 0].long())
         feature_target = self.backbone_model.forward(self.input_target)
+        global_feature_target = global_mean_pool(
+            self.backbone_model.down[-1].F, self.backbone_model.down[-1].C[:, 0].long()
+        )
+
         if self.normalize_feature:
             self.output = torch.nn.functional.normalize(feature.x, dim=1)
             self.output_target = torch.nn.functional.normalize(feature_target.x, dim=1)
-        self.normal = self.normal_estimator(torch.cat([self.xyz, feature.x], 1))
-        self.normal_target = self.normal_estimator(torch.cat([self.xyz_target, feature_target.x], 1))
+        self.normal = self.normal_estimator(torch.cat([self.xyz, global_feature[self.input.batch]], 1))
+        self.normal_target = self.normal_estimator(
+            torch.cat([self.xyz_target, global_feature_target[self.input_target.batch]], 1)
+        )
 
         self.compute_metric_loss()
         self.compute_normal_loss()
@@ -121,7 +130,7 @@ class BaseSSFM(BaseModel):
         return self.output, self.output_target
 
     def get_batch(self):
-        return self.input.batch, self.input.batch_target
+        return self.input.batch, self.input_target.batch
 
     def get_input(self):
         if self.match is not None:

@@ -607,8 +607,9 @@ class RandomWalkDropout(object):
                        mask,
                        num_iter=self.num_iter,
                        random_ratio=self.dropout_ratio)
+        size_pos = len(data.pos)
         for k in data.keys:
-            if(len(data.pos) == len(data[k])):
+            if(size_pos == len(data[k])):
                 data[k] = data[k][mask]
         return data
 
@@ -641,8 +642,9 @@ class SphereDropout(object):
         ind = ind[dist[:, 0] > 0]
         mask = torch.ones(len(pos), dtype=torch.bool)
         mask[ind[:, 0]] = False
+        size_pos = len(data.pos)
         for k in data.keys:
-            if(len(data.pos) == len(data[k])):
+            if(size_pos == len(data[k])):
                 data[k] = data[k][mask]
 
         return data
@@ -667,10 +669,10 @@ class SphereCrop(object):
                                radius=self.radius,
                                max_num=-1, mode=1)
         ind = ind[dist[:, 0] > 0]
+        size_pos = len(data.pos)
         for k in data.keys:
-            if(len(data.pos) == len(data[k])):
+            if(size_pos == len(data[k])):
                 data[k] = data[k][ind[:, 0]]
-
         return data
 
     def __repr__(self):
@@ -678,7 +680,7 @@ class SphereCrop(object):
             self.__class__.__name__, self.radius)
 
 
-def NormalEstimation(object):
+class NormEstimation(object):
     """
     Estimation of normal using PCA (open3d implementation)
     with hybrid
@@ -697,3 +699,8 @@ def NormalEstimation(object):
                 radius=self.radius_nn, max_nn=self.max_nn))
         data.norm = torch.from_numpy(np.asarray(pcd.normals))
         return data
+
+    def __repr__(self):
+        return "{}(radius_nn={}, max_nn={})".format(self.__class__.__name__,
+                                                    self.radius_nn,
+                                                    self.max_nn)

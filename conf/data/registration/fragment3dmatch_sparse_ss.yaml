@@ -13,7 +13,7 @@ data:
   first_subsampling: 0.02
   is_online_matching: False
   self_supervised: true
-  min_size_block: 0.5
+  min_size_block: 1.5
   max_size_block: 2
   num_pos_pairs: 30000
   min_points: 400
@@ -31,20 +31,43 @@ data:
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
-    - transform: NormalEstimation
+    - transform: NormEstimation
       params:
         radius_nn: 0.1
         max_nn: 30
   ss_transform:
     - transform: SphereCrop
       params:
+        radius: 1
+    - transform: SphereCrop
+      params:
+        radius: 1.5
+    - transform: SphereCrop
+      params:
         radius: 2
     - transform: SphereCrop
       params:
         radius: 3
-    - transform: SphereCrop
+    - transform: RandomWalkDropout
       params:
-        radius: 8
+        dropout_ratio: 0.01
+        num_iter: 10000
+        radius: 0.025
+    - transform: RandomWalkDropout
+      params:
+        dropout_ratio: 0.001
+        num_iter: 30000
+        radius: 0.025
+    - transform: RandomWalkDropout
+      params:
+        dropout_ratio: 0.0001
+        num_iter: 70000
+        radius: 0.025
+    - transform: RandomWalkDropout
+      params:
+        dropout_ratio: 0.0001
+        num_iter: 150000
+        radius: 0.025
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints

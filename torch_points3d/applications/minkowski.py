@@ -168,15 +168,20 @@ class MinkowskiUnet(BaseMinkowski):
         self._set_input(data)
         data = self.input
         stack_down = []
+        self.down = []
+        self.up = []
         for i in range(len(self.down_modules) - 1):
             data = self.down_modules[i](data)
             stack_down.append(data)
+            self.down.append(data)
 
         data = self.down_modules[-1](data)
+        self.down.append(data)
         stack_down.append(None)
         # TODO : Manage the inner module
         for i in range(len(self.up_modules)):
             data = self.up_modules[i](data, stack_down.pop())
+            self.up.append(data)
 
         out = Batch(x=data.F, pos=self.xyz, batch=data.C[:, 0])
         if self.has_mlp_head:
