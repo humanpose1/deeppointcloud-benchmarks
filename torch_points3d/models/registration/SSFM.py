@@ -1,11 +1,11 @@
 import torch
 from torch_geometric.data import Data
-from torch_geometric.nn import global_mean_pool
 
 from torch_points3d.models.registration.base import FragmentBaseModel
 from torch_points3d.models.base_model import BaseModel
 from torch_points3d.applications import models
 from torch_points3d.applications.minkowski import Minkowski
+import MinkowskiEngine as ME
 
 from torch_points3d.core.common_modules.base_modules import MLP
 from torch.nn import Linear
@@ -52,7 +52,7 @@ class BaseSSFM(BaseModel):
         self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
-
+        self.gp = ME.MinkowskiGlobalAvgPooling()
         self.normal_estimator = NormalNet(option.normalnet_option.nn_size, option.normalnet_option.normalize)
 
     def compute_loss_match(self):
@@ -104,11 +104,13 @@ class BaseSSFM(BaseModel):
 
     def forward(self):
         feature = self.backbone_model.forward(self.input)
-        global_feature = global_mean_pool(self.backbone_model.down[-1].F, self.backbone_model.down[-1].C[:, 0].long())
+        print(self.backbone_model.down[-1].shape,)
+        global_feature = self.gp(self.backbone_model.down[-1]).F
+        print(self.backbone_model.down[-1].shape)
         feature_target = self.backbone_model.forward(self.input_target)
-        global_feature_target = global_mean_pool(
-            self.backbone_model.down[-1].F, self.backbone_model.down[-1].C[:, 0].long()
-        )
+        global_feature_target = self.gp(self.backbone_model.down[-1]).F
+        print(self.backbone_model.down[-1].shape)
+        print(global_feature[0], global_feature_target[0])
 
         if self.normalize_feature:
             self.output = torch.nn.functional.normalize(feature.x, dim=1)
@@ -119,7 +121,9 @@ class BaseSSFM(BaseModel):
         )
 
         self.compute_metric_loss()
-        self.compute_normal_loss()
+        if self.input.norm is not None:
+            self.compute_normal_loss()
+
         self.loss = self.metric_loss + self.normal_loss
 
     def backward(self):
