@@ -29,7 +29,8 @@ from torch_points3d.datasets.registration.utils import compute_overlap_and_match
 from torch_points3d.metrics.registration_metrics import estimate_transfo
 from torch_points3d.metrics.registration_metrics import get_matches
 from torch_points3d.metrics.registration_metrics import teaser_pp_registration
-from torch_points3d.metrics.registration_metrics import ransac_registration
+
+# from torch_points3d.metrics.registration_metrics import ransac_registration
 from torch_points3d.metrics.registration_metrics import compute_metrics
 from torch_points3d.metrics.colored_tqdm import Coloredtqdm as Ctq
 from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
