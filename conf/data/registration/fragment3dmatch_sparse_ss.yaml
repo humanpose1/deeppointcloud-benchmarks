@@ -72,9 +72,10 @@ data:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
       lparams: [20000]
+    - transform: RandomDropout
     - transform: RandomNoise
       params:
-        sigma: 0.005
+        sigma: 0.01
         clip: 0.05
     - transform: Random3AxisRotation
       params:
@@ -95,6 +96,7 @@ data:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
+    - transform: ShiftVoxels
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
