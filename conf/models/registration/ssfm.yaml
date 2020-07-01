@@ -38,8 +38,9 @@ models:
         stride: [2, 2, 2, 1]
         dilation: [1, 1, 1, 1]
     normalnet_option:
-      nn_size: [8 * in_feat + 3, 3]
-      normalize: True
+      nn_size: [in_feat, in_feat]
+      last_size: in_feat
+      normalize: False
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
       params:

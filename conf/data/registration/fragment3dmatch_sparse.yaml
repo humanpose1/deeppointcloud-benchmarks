@@ -12,7 +12,7 @@ data:
   depth_thresh: 4.5
   first_subsampling: 0.02
   is_online_matching: False
-  self_supervised: false
+  self_supervised: False
   min_size_block: 0.5
   max_size_block: 1
   num_pos_pairs: 30000

@@ -42,14 +42,10 @@ data:
     - transform: SphereCrop
       params:
         radius: 1.5
-    - transform: SphereCrop
-      params:
-        radius: 2
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
       lparams: [20000]
-    - transform: RandomDropout
     - transform: RandomNoise
       params:
         sigma: 0.01
