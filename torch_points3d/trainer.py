@@ -45,7 +45,12 @@ class Trainer:
     def _initialize_trainer(self):
 
         # Get device
-        self._device = torch.device("cuda" if (torch.cuda.is_available() and self._cfg.training.cuda) else "cpu")
+        if self._cfg.training.cuda > -1 and torch.cuda.is_available():
+            device = "cuda" + str(self._cfg.training.cuda)
+            torch.cuda.set_device(self._cfg.training.cuda)
+        else:
+            device = "cpu"
+        self._device = torch.device(device)
         log.info("DEVICE : {}".format(self._device))
 
         # Enable CUDNN BACKEND
@@ -221,7 +226,7 @@ class Trainer:
                     for data in tq_loader:
                         with torch.no_grad():
                             self._model.set_input(data, self._device)
-                            self._model.forward()
+                            self._model.forward(epoch=epoch)
 
                         self._tracker.track(self._model, data=data, **self.tracker_options)
                         tq_loader.set_postfix(**self._tracker.get_metrics(), color=COLORS.TEST_COLOR)

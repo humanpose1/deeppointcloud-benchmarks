@@ -208,7 +208,7 @@ export PATH="/usr/local/cuda-10.2/bin:$PATH"
 You are now in a position to install MinkowskiEngine with GPU support:
 
 ```bash
-poetry run pip install  git+git://github.com/StanfordVL/MinkowskiEngine.git#7087411269605b8cb5b9f61246d474f507ca3781
+poetry run pip install  git+git://github.com/StanfordVL/MinkowskiEngine.git#v0.4.3
 ```
 
 #### Pycuda
@@ -386,6 +386,14 @@ pip uninstall torch-scatter torch-sparse torch-cluster torch-points-kernels -y
 rm -rf ~/.cache/pip
 poetry install
 ```
+
+#### CUDA kernel failed : no kernel image is available for execution on the device
+
+This can happen when trying to run the code on a different GPU than the one used to compile the `torch-points-kernels` library. Uninstall `torch-points-kernels`, clear cache, and reinstall after setting the `TORCH_CUDA_ARCH_LIST` environment variable. For example, for compiling with a Tesla T4 (Turing 7.5) and running the code on a Tesla V100 (Volta 7.0) use:
+```
+export TORCH_CUDA_ARCH_LIST="7.0;7.5"
+```
+See [this useful chart](http://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/) for more architecture compatibility.
 
 ## Contributing
 
