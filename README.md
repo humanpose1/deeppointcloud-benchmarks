@@ -67,8 +67,7 @@ where each folder contains the dataset related to each task.
 - **[KPConv](https://github.com/nicolas-chaulet/torch-points3d/tree/master/torch_points3d/modules/KPConv)** from Hugues Thomas _et al._: [KPConv: Flexible and Deformable Convolution for Point Clouds](https://arxiv.org/abs/1801.07791) (ICCV 2019)
 - **[MinkowskiEngine](https://github.com/nicolas-chaulet/torch-points3d/tree/master/torch_points3d/modules/MinkowskiEngine)** from Christopher Choy _et al._: [4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks](https://arxiv.org/abs/1904.08755) (CVPR19)
 - **[VoteNet](https://github.com/nicolas-chaulet/torch-points3d/tree/master/torch_points3d/models/object_detection/votenet.py)** from Charles R. Qi _et al._: [Deep Hough Voting for 3D Object Detection in Point Clouds](https://arxiv.org/abs/1904.09664) (ICCV 19)
-
-* **[FCGF](https://github.com/chrischoy/FCGF)** from Christopher Choy _et al._: [Fully Convolutional Geometric Features](https://node1.chrischoy.org/data/publications/fcgf/fcgf.pdf) (ICCV'19)
+- **[FCGF](https://github.com/chrischoy/FCGF)** from Christopher Choy _et al._: [Fully Convolutional Geometric Features](https://node1.chrischoy.org/data/publications/fcgf/fcgf.pdf) (ICCV'19)
 
 ## Available datasets
 
@@ -395,6 +394,11 @@ export TORCH_CUDA_ARCH_LIST="7.0;7.5"
 ```
 See [this useful chart](http://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/) for more architecture compatibility.
 
+#### Cannot use wandb on Windows
+
+Raises `OSError: [WinError 6] The handle is invalid` / `wandb: ERROR W&B process failed to launch`
+Wandb is currently broken on Windows (see [this issue](https://github.com/wandb/client/issues/862)), a workaround is to use the command line argument `wandb.log=false`
+
 ## Contributing
 
 Contributions are welcome! The only asks are that you stick to the styling and that you add tests as you add more features!
@@ -411,3 +415,19 @@ When it comes to docstrings we use [numpy style](https://numpydoc.readthedocs.io
 Visual Studio Code, there is a great [extension](https://github.com/NilsJPWerner/autoDocstring) that can help with that. Install it and set the format to numpy and you should be good to go!
 
 Finaly, if you want to have a direct chat with us feel free to join our slack, just shoot us an email and we'll add you.
+
+## Citing
+If you find our work useful, do not hesitate to cite it:
+```
+@misc{
+  tp3d,
+  author = {Chaton, T. and Chaulet N.},
+  title = {Torch Points3D}, year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/nicolas-chaulet/torch-points3d}}
+}
+```
+and please also include a citation to the
+[models](https://github.com/nicolas-chaulet/torch-points3d#methods-currently-implemented)
+or the [datasets](https://github.com/nicolas-chaulet/torch-points3d#available-datasets) you have used in your experiments!
