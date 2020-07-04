@@ -22,7 +22,7 @@ from torch_points3d.utils.transform_utils import SamplingStrategy
 from torch_points3d.utils.config import is_list
 from torch_points3d.utils import is_iterable
 from .grid_transform import group_data, GridSampling3D, shuffle_data
-
+from .features import Random3AxisRotation
 
 
 
@@ -681,6 +681,39 @@ class SphereCrop(object):
     def __repr__(self):
         return "{}(radius={})".format(
             self.__class__.__name__, self.radius)
+
+
+class SquareCrop(object):
+    """
+    crop the point cloud on a square
+    """
+
+    def __init__(self, c=1, rot_x=180, rot_y=180, rot_z=180):
+        self.c = c
+        self.random_rotation = Random3AxisRotation(
+            rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
+
+    def __call__(self, data):
+        data_temp = data.clone()
+        i = torch.randint(0, len(data.pos), (1, ))
+        center = data_temp.pos[i]
+        min_square = center - self.c
+        max_square = center + self.c
+        data_temp.pos = data_temp.pos - center
+        data_temp = self.random_rotation(data_temp)
+        data_temp.pos = data_temp.pos + center
+        mask = torch.prod((data_temp.pos - min_square)>0, dim=1) * torch.prod(
+            (max_square - data_temp.pos) > 0, dim=1)
+        mask = mask.to(torch.bool)
+        data.pos = data.pos[mask]
+        return data
+
+
+    def __repr__(self):
+        return "{}(c={}, rotation={})".format(
+            self.__class__.__name__,
+            self.c,
+            self.random_rotation.__class__.__name__)
 
 
 class NormEstimation(object):
