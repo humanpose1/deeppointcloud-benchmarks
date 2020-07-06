@@ -705,7 +705,10 @@ class SquareCrop(object):
         mask = torch.prod((data_temp.pos - min_square)>0, dim=1) * torch.prod(
             (max_square - data_temp.pos) > 0, dim=1)
         mask = mask.to(torch.bool)
-        data.pos = data.pos[mask]
+        size_pos = len(data.pos)
+        for k in data.keys:
+            if(size_pos == len(data[k])):
+                data[k] = data[k][mask]
         return data
 
 

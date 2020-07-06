@@ -11,13 +11,19 @@ from torch_points3d.core.common_modules.base_modules import MLP
 from torch.nn import Linear
 
 
-class ProjectNet(torch.nn.Module):
+class MLPNet(torch.nn.Module):
     """
     project the features in a non linear space
     """
 
-    def __init__(self, nn_size=[128, 256, 256], last_size=256, normalize=True):
+    def __init__(self, nn_size=[128, 256, 256], last_size=256, normalize=True, first_activation=True):
         super().__init__()
+        if first_activation:
+            # because at the end of the network there is no activation
+            self.activation = torch.nn.ReLU()
+        else:
+            self.activation = torch.nn.Identity()
+
         if nn_size is None:
             self.local_nn = torch.nn.Identity()
             self.last_layer = Linear(last_size, last_size, bias=False)
@@ -27,7 +33,8 @@ class ProjectNet(torch.nn.Module):
         self.normalize = normalize
 
     def forward(self, x):
-        x = self.local_nn(x)
+
+        x = self.activation(self.local_nn(x))
         norm = self.last_layer(x)
         if self.normalize:
             return torch.nn.functional.normalize(norm, dim=1)
@@ -47,7 +54,7 @@ class BaseSSFM(BaseModel):
         BaseModel.__init__(self, option)
         self.normalize_feature = option.normalize_feature
         self.mode = option.loss_mode
-        self.loss_names = ["metric_loss", "loss"]
+        self.loss_names = ["metric_loss", "loss", "normal_loss"]
         input_nc = dataset.feature_dimension
         backbone_option = option.backbone
         # backbone_cls = getattr(models, backbone_option.model_type)
@@ -56,9 +63,18 @@ class BaseSSFM(BaseModel):
         self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
-        self.gp = ME.MinkowskiGlobalAvgPooling()
-        self.last = ProjectNet(
-            option.normalnet_option.nn_size, option.normalnet_option.last_size, option.normalnet_option.normalize
+
+        self.last = MLPNet(
+            option.feat_options.nn_size,
+            option.feat_options.last_size,
+            option.feat_options.normalize,
+            option.feat_options.first_activation,
+        )
+        self.normal_net = MLPNet(
+            option.normal_options.nn_size,
+            3,
+            option.normal_options_option.normalize,
+            option.normal_options_option.first_activation,
         )
 
     def compute_loss_match(self):
@@ -68,9 +84,7 @@ class BaseSSFM(BaseModel):
         else:
             xyz = self.input.pos
             xyz_target = self.input_target.pos
-        loss_reg = self.metric_loss_module(
-            self.output_loss, self.output_loss_target, self.match[:, :2], xyz, xyz_target
-        )
+        loss_reg = self.metric_loss_module(self.output, self.output_target, self.match[:, :2], xyz, xyz_target)
         return loss_reg
 
     def compute_loss_label(self):
@@ -78,7 +92,7 @@ class BaseSSFM(BaseModel):
         compute the loss separating the miner and the loss
         each point correspond to a labels
         """
-        output = torch.cat([self.output_loss[self.match[:, 0]], self.output_target_loss[self.match[:, 1]]], 0)
+        output = torch.cat([self.output[self.match[:, 0]], self.output_target[self.match[:, 1]]], 0)
         rang = torch.arange(0, len(self.match), dtype=torch.long, device=self.match.device)
         labels = torch.cat([rang, rang], 0)
         hard_pairs = None
@@ -113,14 +127,22 @@ class BaseSSFM(BaseModel):
     def forward(self):
         feature = self.backbone_model.forward(self.input)
         feature_target = self.backbone_model.forward(self.input_target)
-        if self.normalize_feature:
-            self.output = torch.nn.functional.normalize(feature.x, dim=1)
-            self.output_target = torch.nn.functional.normalize(feature_target.x, dim=1)
-        self.output_loss = self.last(self.output)
-        self.output_loss_target = self.last(self.output_target)
 
+        # compute last feature
+        self.output = self.last(feature.x)
+        self.output_target = self.last(self.output_target(feature_target.x))
+
+        # compute normals
+        self.normal = self.normal_net(feature.x)
+        self.normal_target = self.normal_net(feature_target.x)
+
+        # loss
+        if hasattr("norm", self.input):
+            self.compute_normal_loss()
+        else:
+            self.normal_loss = 0
         self.compute_metric_loss()
-        self.loss = self.metric_loss
+        self.loss = self.metric_loss + self.normal_loss
 
     def backward(self):
         if hasattr(self, "loss"):
