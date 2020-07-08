@@ -71,11 +71,9 @@ class BaseSSFM(BaseModel):
             option.feat_options.first_activation,
         )
         self.normal_net = MLPNet(
-            option.normal_options.nn_size,
-            3,
-            option.normal_options_option.normalize,
-            option.normal_options_option.first_activation,
+            option.normal_options.nn_size, 3, option.normal_options.normalize, option.normal_options.first_activation,
         )
+        self.lambda_normal = option.normal_options.const
 
     def compute_loss_match(self):
         if hasattr(self, "xyz"):
@@ -113,7 +111,7 @@ class BaseSSFM(BaseModel):
     def compute_normal_loss(self):
         loss = torch.sum(torch.abs(self.normal * self.input.norm), dim=1).mean()
         loss_target = torch.sum(torch.abs(self.normal_target * self.input_target.norm), dim=1).mean()
-        self.normal_loss = 2 - loss - loss_target
+        self.normal_loss = 1 - loss + 1 - loss_target
 
     def set_input(self, data, device):
         self.input, self.input_target = data.to_data()
@@ -124,25 +122,25 @@ class BaseSSFM(BaseModel):
         self.xyz = self.input.pos.to(device)
         self.xyz_target = self.input_target.pos.to(device)
 
-    def forward(self):
+    def forward(self, *args, **kwargs):
         feature = self.backbone_model.forward(self.input)
         feature_target = self.backbone_model.forward(self.input_target)
 
         # compute last feature
         self.output = self.last(feature.x)
-        self.output_target = self.last(self.output_target(feature_target.x))
+        self.output_target = self.last(feature_target.x)
 
         # compute normals
         self.normal = self.normal_net(feature.x)
         self.normal_target = self.normal_net(feature_target.x)
 
         # loss
-        if hasattr("norm", self.input):
+        if hasattr(self.input, "norm"):
             self.compute_normal_loss()
         else:
             self.normal_loss = 0
         self.compute_metric_loss()
-        self.loss = self.metric_loss + self.normal_loss
+        self.loss = self.metric_loss + self.lambda_normal * self.normal_loss
 
     def backward(self):
         if hasattr(self, "loss"):

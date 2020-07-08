@@ -46,6 +46,7 @@ models:
       nn_size: [in_feat, in_feat]
       normalize: True
       first_activation: True
+      const: 0.5
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
       params:
