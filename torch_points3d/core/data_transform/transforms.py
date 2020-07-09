@@ -743,3 +743,30 @@ class NormEstimation(object):
         return "{}(radius_nn={}, max_nn={})".format(self.__class__.__name__,
                                                     self.radius_nn,
                                                     self.max_nn)
+
+class DensityFilter(object):
+    """
+    Remove points with a low density
+    """
+
+    def __init__(self, radius_nn=0.04, min_num=6):
+        self.radius_nn = radius_nn
+        self.min_num = min_num
+
+    def __call__(self, data):
+
+        ind, dist = ball_query(data.pos, data.pos,
+                               radius=self.radius_nn,
+                               max_num=-1, mode=0)
+
+        mask = ((dist > 0).sum(1) > self.min_num)
+        size_pos = len(data.pos)
+        for k in data.keys:
+            if(size_pos == len(data[k])):
+                data[k] = data[k][mask]
+        return data
+
+    def __repr__(self):
+        return "{}(radius_nn={}, min_num={})".format(self.__class__.__name__,
+                                                     self.radius_nn,
+                                                     self.min_num)

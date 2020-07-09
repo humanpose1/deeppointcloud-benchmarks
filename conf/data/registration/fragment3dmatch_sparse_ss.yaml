@@ -16,7 +16,7 @@ data:
   min_size_block: 1.5
   max_size_block: 2
   num_pos_pairs: 30000
-  min_points: 400
+  min_points: 3000
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -48,9 +48,13 @@ data:
       lparams: [20000]
     - transform: RandomWalkDropout
       params:
-        dropout_ratio: 0.01
-        num_iter: 15000
-        radius: 0.03
+        dropout_ratio: 2e-5
+        num_iter: 6e3
+        radius: 0.035
+    - transform: DensityFilter
+      params:
+        radius_nn: 0.08
+        min_num: 16
     - transform: RandomNoise
       params:
         sigma: 0.01
