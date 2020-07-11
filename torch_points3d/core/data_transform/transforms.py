@@ -558,6 +558,13 @@ class RandomDropout:
         )
 
 
+def apply_mask(data, mask, skip_keys=[]):
+    size_pos = len(data.pos)
+    for k in data.keys:
+        if(size_pos == len(data[k]) and k not in skip_keys):
+            data[k] = data[k][mask]
+    return data
+
 @numba.jit(nopython=True, cache=True)
 def rw_mask(pos, ind, dist, mask_vertices, random_ratio=0.04, num_iter=5000):
     rand_ind = np.random.randint(0, len(pos))
@@ -589,13 +596,16 @@ class RandomWalkDropout(object):
         radius of the neighborhood search to create the graph
     max_num: int optional
        max number of neighbors
+    skip_keys: list of string.
+        skip_keys where we don't apply the mask
     """
 
-    def __init__(self, dropout_ratio=0.05, num_iter=5000, radius=0.5, max_num=-1):
+    def __init__(self, dropout_ratio=0.05, num_iter=5000, radius=0.5, max_num=-1, skip_keys=[]):
         self.dropout_ratio = dropout_ratio
         self.num_iter = num_iter
         self.radius = radius
         self.max_num = max_num
+        self.skip_keys = skip_keys
 
     def __call__(self, data):
 
@@ -610,14 +620,13 @@ class RandomWalkDropout(object):
                        mask,
                        num_iter=self.num_iter,
                        random_ratio=self.dropout_ratio)
-        size_pos = len(data.pos)
-        for k in data.keys:
-            if(size_pos == len(data[k])):
-                data[k] = data[k][mask]
+
+        data = apply_mask(data, mask, self.skip_keys)
+
         return data
 
     def __repr__(self):
-        return "{}(dropout_ratio={}, num_iter={}, radius={}, max_num={})".format(self.__class__.__name__, self.dropout_ratio, self.num_iter, self.radius, self.max_num)
+        return "{}(dropout_ratio={}, num_iter={}, radius={}, max_num={}, skip_keys={})".format(self.__class__.__name__, self.dropout_ratio, self.num_iter, self.radius, self.max_num, self.skip_keys)
 
 
 class SphereDropout(object):
@@ -645,10 +654,7 @@ class SphereDropout(object):
         ind = ind[dist[:, 0] > 0]
         mask = torch.ones(len(pos), dtype=torch.bool)
         mask[ind[:, 0]] = False
-        size_pos = len(data.pos)
-        for k in data.keys:
-            if(size_pos == len(data[k])):
-                data[k] = data[k][mask]
+        data = apply_mask(data, mask)
 
         return data
 
@@ -705,10 +711,7 @@ class SquareCrop(object):
         mask = torch.prod((data_temp.pos - min_square)>0, dim=1) * torch.prod(
             (max_square - data_temp.pos) > 0, dim=1)
         mask = mask.to(torch.bool)
-        size_pos = len(data.pos)
-        for k in data.keys:
-            if(size_pos == len(data[k])):
-                data[k] = data[k][mask]
+        data = apply_mask(data, mask)
         return data
 
 
@@ -749,9 +752,10 @@ class DensityFilter(object):
     Remove points with a low density
     """
 
-    def __init__(self, radius_nn=0.04, min_num=6):
+    def __init__(self, radius_nn=0.04, min_num=6, skip_keys=[]):
         self.radius_nn = radius_nn
         self.min_num = min_num
+        self.skip_keys = skip_keys
 
     def __call__(self, data):
 
@@ -760,13 +764,11 @@ class DensityFilter(object):
                                max_num=-1, mode=0)
 
         mask = ((dist > 0).sum(1) > self.min_num)
-        size_pos = len(data.pos)
-        for k in data.keys:
-            if(size_pos == len(data[k])):
-                data[k] = data[k][mask]
+        data = apply_mask(data, mask, self.skip_keys)
         return data
 
     def __repr__(self):
-        return "{}(radius_nn={}, min_num={})".format(self.__class__.__name__,
-                                                     self.radius_nn,
-                                                     self.min_num)
+        return "{}(radius_nn={}, min_num={}, skip_keys={})".format(self.__class__.__name__,
+                                                                   self.radius_nn,
+                                                                   self.min_num,
+                                                                   self.skip_keys)

@@ -95,10 +95,11 @@ class GridSampling3D:
         If mode is `last`, one random points per cell will be selected with its associated features
     """
 
-    def __init__(self, size, quantize_coords=False, mode="mean", verbose=False):
+    def __init__(self, size, quantize_coords=False, mode="mean", verbose=False, skip_keys=[]):
         self._grid_size = size
         self._quantize_coords = quantize_coords
         self._mode = mode
+        self._skip_keys = skip_keys
         if verbose:
             log.warning(
                 "If you need to keep track of the position of your points, use SaveOriginalPosId transform before using GridSampling3D"
@@ -120,7 +121,7 @@ class GridSampling3D:
             cluster = voxel_grid(coords, data.batch, 1)
         cluster, unique_pos_indices = consecutive_cluster(cluster)
 
-        data = group_data(data, cluster, unique_pos_indices, mode=self._mode)
+        data = group_data(data, cluster, unique_pos_indices, mode=self._mode, skip_keys=self._skip_keys)
         if self._quantize_coords:
             data.coords = coords[unique_pos_indices]
 
