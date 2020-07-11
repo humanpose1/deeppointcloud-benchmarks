@@ -46,7 +46,14 @@ models:
       nn_size: [in_feat, in_feat]
       normalize: True
       first_activation: True
+      const: 0
+    reconst_options:
+      in_channel: 8 * in_feat
+      size_seed: 4
+      voxel_size: 0.02
+      scale: 0.5
       const: 0.5
+
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
       params:
