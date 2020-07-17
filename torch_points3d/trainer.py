@@ -1,3 +1,4 @@
+import open3d
 import os
 import torch
 import hydra

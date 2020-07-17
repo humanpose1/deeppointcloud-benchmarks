@@ -128,11 +128,13 @@ class MinkowskiEncoder(BaseMinkowski):
 
         """
         self._set_input(data)
+        self.down = []
         data = self.input
         for i in range(len(self.down_modules)):
             data = self.down_modules[i](data)
+            self.down.append(data)
 
-        out = Batch(x=data.F, batch=data.C[:, 0].long().to(data.F.device))
+        out = Batch(x=data.F, batch=data.C[:, 0].long().to(data.F.device), coords=data.C[:, 1:].to(data.F.device))
         if not isinstance(self.inner_modules[0], Identity):
             out = self.inner_modules[0](out)
 
