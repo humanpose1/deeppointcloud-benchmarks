@@ -248,7 +248,7 @@ class ElasticDistortion:
             self._granularity,
             self._magnitude,
             self._spatial_resolution,
-<<<<<<< HEAD
+
         )
 
 
@@ -269,6 +269,5 @@ class RandomGridSampling3D(object):
         return "{}(min_sampling={}, max_sampling={}, mode={})".format(
             self.__class__.__name__, self.min_sampling,
             self.max_sampling, self.mode
-=======
->>>>>>> upstream/master
+
         )
