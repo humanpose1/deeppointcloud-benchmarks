@@ -1,5 +1,6 @@
 import open3d
 import os
+import copy
 import torch
 import hydra
 import time
@@ -44,6 +45,10 @@ class Trainer:
         self._initialize_trainer()
 
     def _initialize_trainer(self):
+        # Enable CUDNN BACKEND
+        torch.backends.cudnn.enabled = self.enable_cudnn
+        if not self.has_training:
+            self._cfg.training = self._cfg
 
         # Get device
         if self._cfg.training.cuda > -1 and torch.cuda.is_available():
@@ -53,12 +58,6 @@ class Trainer:
             device = "cpu"
         self._device = torch.device(device)
         log.info("DEVICE : {}".format(self._device))
-
-        # Enable CUDNN BACKEND
-        torch.backends.cudnn.enabled = self.enable_cudnn
-
-        if not self.has_training:
-            self._cfg.training = self._cfg
 
         # Profiling
         if self.profiling:
@@ -86,8 +85,11 @@ class Trainer:
             )
         else:
             self._dataset: BaseDataset = instantiate_dataset(self._cfg.data)
-            self._model: BaseModel = instantiate_model(self._cfg, self._dataset)
+            self._model: BaseModel = instantiate_model(copy.deepcopy(self._cfg), self._dataset)
+            # Make sure the model can be built directly from configuration and update checkpoint
+            self._model: BaseModel = self._checkpoint.re_instantiate_model(self._dataset)
             self._model.instantiate_optimizers(self._cfg)
+
         log.info(self._model)
         self._model.log_optimizers()
         log.info("Model size = %i", sum(param.numel() for param in self._model.parameters() if param.requires_grad))
@@ -142,15 +144,17 @@ class Trainer:
             if self._dataset.has_test_loaders:
                 self._test_epoch(epoch, "test")
 
-    def eval(self):
+    def eval(self, stage_name=""):
         self._is_training = False
 
         epoch = self._checkpoint.start_epoch
         if self._dataset.has_val_loader:
-            self._test_epoch(epoch, "val")
+            if not stage_name or stage_name == "val":
+                self._test_epoch(epoch, "val")
 
         if self._dataset.has_test_loaders:
-            self._test_epoch(epoch, "test")
+            if not stage_name or stage_name == "test":
+                self._test_epoch(epoch, "test")
 
     def _finalize_epoch(self, epoch):
         self._tracker.finalise(**self.tracker_options)

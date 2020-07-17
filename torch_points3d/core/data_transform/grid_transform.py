@@ -2,6 +2,7 @@ from typing import *
 import random
 import numpy as np
 import numpy
+import random
 import scipy
 import re
 import torch
@@ -167,8 +168,11 @@ class SaveOriginalPosId:
 
 
 class ElasticDistortion:
+
     """Apply elastic distortion on sparse coordinate space. First projects the position onto a
     voxel grid and then apply the distortion to the voxel grid.
+
+
     Parameters
     ----------
     spatial_resolution:
@@ -244,6 +248,7 @@ class ElasticDistortion:
             self._granularity,
             self._magnitude,
             self._spatial_resolution,
+<<<<<<< HEAD
         )
 
 
@@ -264,4 +269,6 @@ class RandomGridSampling3D(object):
         return "{}(min_sampling={}, max_sampling={}, mode={})".format(
             self.__class__.__name__, self.min_sampling,
             self.max_sampling, self.mode
+=======
+>>>>>>> upstream/master
         )
