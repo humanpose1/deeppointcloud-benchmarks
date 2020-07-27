@@ -1,0 +1,32 @@
+data:
+  task: registration
+  class: testliffre.TestLiffreDataset
+  dataroot: data
+  name: Liffre
+  is_patch: False
+  first_subsampling: 0.1
+  num_random_pt: 5000
+  is_offline: True
+  pre_transforms:
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+  test_transforms:
+    - transform: SaveOriginalPosId
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: AddSpecularity
+      params:
+        gamma: 15
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'spec'

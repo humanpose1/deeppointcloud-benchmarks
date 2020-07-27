@@ -46,6 +46,19 @@ data:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
       lparams: [20000]
+    - transform: RandomWalkDropout
+      params:
+        dropout_ratio: 2e-5
+        num_iter: 6e3
+        radius: 0.035
+    - transform: DensityFilter
+      params:
+        radius_nn: 0.08
+        min_num: 16
+    - transform: RandomNoise
+      params:
+        sigma: 0.01
+        clip: 0.05
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
@@ -55,31 +68,22 @@ data:
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
+    - transform: ElasticDistortion
+      params:
+        spatial_resolution: 0.01
+        granularity: [0.1, 0.1]
+        magnitude: [0.8, 0.8]
     - transform: XYZFeature
       params:
         add_x: True
         add_y: True
         add_z: True
-    - transform: RandomNoise
-      params:
-        sigma: 0.01
-        clip: 0.05
-    - transform: RandomWalkDropout
-      params:
-        dropout_ratio: 2e-4
-        num_iter: 2e4
-        radius: 0.035
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
-    - transform: DensityFilter
-      params:
-        radius_nn: 0.08
-        min_num: 16
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
+    - transform: ShiftVoxels
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
@@ -107,7 +111,6 @@ data:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
@@ -126,7 +129,6 @@ data:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:

@@ -84,7 +84,7 @@ class KittiDataset(BaseSiameseDataset):
             max_dist_overlap=dataset_opt.max_dist_overlap,
             max_time_distance=dataset_opt.max_time_distance,
             min_dist=dataset_opt.min_dist,
-            ss_transform=ss_transform,
+            ss_transform=self.ss_transform,
             pre_transform=pre_transform,
             transform=train_transform,
             pre_filter=pre_filter,

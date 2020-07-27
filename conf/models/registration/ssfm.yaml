@@ -1,6 +1,6 @@
 models:
   SSFM:
-    class: SSFM.BaseSSFM
+    class: SSFM.SSFM_v1
     conv_type: "SPARSE"
     loss_mode: "match"
     normalize_feature: True
@@ -53,6 +53,150 @@ models:
       voxel_size: 0.02
       scale: 0.5
       const: 0.5
+
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+
+
+  SSFM_v3:
+    class: SSFM.Complete_SSFM_v2
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    normalize_feature: True
+    define_constants:
+      in_feat: 32
+      in_feat_tr: 64
+
+    encoder:
+      class: minkowski.Minkowski_Model
+      down_conv:
+        module_name: Res2BlockDown
+        dimension: 3
+        bn_momentum: 0.2
+        down_conv_nn:
+          [
+           [in_feat, in_feat],
+           [in_feat, in_feat],
+          ]
+        kernel_size: [3, 3]
+        stride: [4, 4]
+        dilation: [1, 1, 1, 1]
+    feature_extractor:
+      class: minkowski.Minkowski_Model
+      down_conv:
+        module_name: Res2BlockDown
+        dimension: 3
+        bn_momentum: 0.2
+        down_conv_nn:
+            [
+                [FEAT, in_feat],
+                [in_feat, 2*in_feat],
+                [2*in_feat, 4*in_feat],
+                [4*in_feat, 8*in_feat]
+            ]
+        kernel_size: [5, 3, 3, 3]
+        stride: [1, 2, 2, 2]
+        dilation: [1, 1, 1, 1]
+      up_conv:
+        module_name: Res2BlockUp
+        dimension: 3
+        bn_momentum: 0.2
+        up_conv_nn:
+          [
+              [8*in_feat, in_feat_tr],
+              [in_feat_tr + 4*in_feat, in_feat_tr],
+              [in_feat_tr + 2*in_feat, in_feat_tr],
+              [in_feat_tr + in_feat, in_feat_tr, in_feat]
+          ]
+        kernel_size: [3, 3, 3, 1]
+        stride: [2, 2, 2, 1]
+        dilation: [1, 1, 1, 1]
+
+    reconst_options:
+      in_channel_encoder: in_feat
+      in_channel_decoder: in_feat
+      size_seed: 12
+      voxel_size: 0.02
+      scale: 0.5
+      const: 1
+
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+
+  SSFM_v2:
+    class: SSFM.Complete_SSFM
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    normalize_feature: True
+    define_constants:
+      in_feat: 32
+      in_feat_tr: 64
+
+    encoder:
+      class: minkowski.Minkowski_Model
+      down_conv:
+        module_name: Res2BlockDown
+        dimension: 3
+        bn_momentum: 0.2
+        down_conv_nn:
+          [
+           [FEAT, in_feat],
+           [in_feat, 2*in_feat],
+           [2*in_feat, 4*in_feat],
+           [4*in_feat, 8*in_feat]
+          ]
+        kernel_size: [5, 3, 3, 3]
+        stride: [1, 2, 2, 2]
+        dilation: [1, 1, 1, 1]
+    feature_extractor:
+      class: minkowski.Minkowski_Model
+      down_conv:
+        module_name: Res2BlockDown
+        dimension: 3
+        bn_momentum: 0.2
+        down_conv_nn:
+            [
+                [3, in_feat],
+                [in_feat, 2*in_feat],
+                [2*in_feat, 4*in_feat],
+                [4*in_feat, 8*in_feat]
+            ]
+        kernel_size: [5, 3, 3, 3]
+        stride: [1, 2, 2, 2]
+        dilation: [1, 1, 1, 1]
+      up_conv:
+        module_name: Res2BlockUp
+        dimension: 3
+        bn_momentum: 0.2
+        up_conv_nn:
+          [
+              [8*in_feat, in_feat_tr],
+              [in_feat_tr + 4*in_feat, in_feat_tr],
+              [in_feat_tr + 2*in_feat, in_feat_tr],
+              [in_feat_tr + in_feat, in_feat_tr, in_feat]
+          ]
+        kernel_size: [3, 3, 3, 1]
+        stride: [2, 2, 2, 1]
+        dilation: [1, 1, 1, 1]
+
+    reconst_options:
+      in_channel: 8 * in_feat
+      size_seed: 6
+      voxel_size: 0.02
+      scale: 0.5
+      const: 1
 
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"

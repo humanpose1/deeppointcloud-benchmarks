@@ -1,22 +1,19 @@
 data:
   task: registration
-  class: general3dmatch.General3DMatchDataset
+  class: modelnet.SiameseModelNetDataset
   dataroot: data
-  name: 3DMatch
+  name: modelnet
+  name_modelnet: "10"
   is_patch: False
-  num_frame_per_fragment: 101
   max_dist_overlap: 0.05
   min_overlap_ratio: 0.3
-  tsdf_voxel_size: 0.006
-  limit_size: 850
-  depth_thresh: 4.5
   first_subsampling: 0.02
-  is_online_matching: False
+
   self_supervised: true
   min_size_block: 1.5
   max_size_block: 2
   num_pos_pairs: 30000
-  min_points: 3000
+  min_points: 500
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -31,21 +28,18 @@ data:
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
-    - transform: NormEstimation
-      params:
-        radius_nn: 0.1
-        max_nn: 30
   ss_transform:
     - transform: SquareCrop
       params:
         c: 1
-    - transform: SquareCrop
-      params:
-        c: 1.5
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
-      lparams: [20000]
+      lparams: [2048]
+    - transform: RandomNoise
+      params:
+        sigma: 0.01
+        clip: 0.05
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
@@ -60,26 +54,11 @@ data:
         add_x: True
         add_y: True
         add_z: True
-    - transform: RandomNoise
-      params:
-        sigma: 0.01
-        clip: 0.05
-    - transform: RandomWalkDropout
-      params:
-        dropout_ratio: 2e-4
-        num_iter: 2e4
-        radius: 0.035
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
-    - transform: DensityFilter
-      params:
-        radius_nn: 0.08
-        min_num: 16
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
@@ -89,8 +68,12 @@ data:
 
   val_transform:
     - transform: SaveOriginalPosId
+    - transform: Center
     - transform: FixedPoints
-      lparams: [20000]
+      lparams: [2048]
+    - transform: SquareCrop
+      params:
+        c: 1
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
@@ -107,7 +90,6 @@ data:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
@@ -116,6 +98,24 @@ data:
 
   test_transform:
     - transform: SaveOriginalPosId
+    - transform: Center
+    - transform: SquareCrop
+      params:
+        c: 1
+    - transform: RandomNoise
+      params:
+        sigma: 0.01
+        clip: 0.05
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 45
+        rot_y: 45
+        rot_z: 45
+    - transform: RandomTranslation
+      params:
+        delta_min: [-0.5, -0.5, -0.5]
+        delta_max: [0.5, 0.5, 0.5]
     - transform: XYZFeature
       params:
         add_x: True
@@ -126,7 +126,6 @@ data:
         size: ${data.first_subsampling}
         quantize_coords: True
         mode: "last"
-        skip_keys: ["pos_x", "pos_y", "pos_z"]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:

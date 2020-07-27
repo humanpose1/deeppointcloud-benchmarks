@@ -23,8 +23,8 @@ data:
   use_ransac: False
   use_teaser: True
   sym: True
-  rot_thresh: 4
-  trans_thresh: 0.15
+  rot_thresh: 15
+  trans_thresh: 0.3
   ransac_thresh: 0.02
   noise_bound_teaser: 0.1
   pre_transform:

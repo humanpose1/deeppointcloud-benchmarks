@@ -70,6 +70,7 @@ class FragmentRegistrationTracker(BaseTracker):
 it measures loss, feature match recall, hit ratio, rotation error, translation error.
         """
         super(FragmentRegistrationTracker, self).__init__(stage, wandb_log, use_tensorboard)
+
         self.reset(stage)
         self.num_points = num_points
         self.tau_1 = tau_1
