@@ -366,3 +366,27 @@ class XYZFeature(object):
 
     def __repr__(self):
         return "{}(axis={})".format(self.__class__.__name__, self._axis_names)
+
+
+class AddSpecularity(object):
+    """
+    add the specularity as a feature with respect to a fixed vector (name spec)
+    Parameters
+    -----------
+    gamma: int [default: 5]
+        power of specularity
+    vec: list [default: [0, 0, 1]]
+        the fixed vector to which we compare the normal
+    """
+
+    def __init__(self, gamma: float = 5, vec: List[float] = [0.0, 0.0, 1.0]):
+
+        self.gamma = gamma
+        self.vec = torch.tensor(vec)
+
+    def __call__(self, data):
+
+        assert hasattr(data, "norm")
+        norm = data.norm
+        data.spec = torch.abs(norm.mm(self.vec.view(3, 1))) ** self.gamma
+        return data
