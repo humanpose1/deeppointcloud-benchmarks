@@ -390,3 +390,6 @@ class AddSpecularity(object):
         norm = data.norm
         data.spec = torch.abs(norm.mm(self.vec.view(3, 1))) ** self.gamma
         return data
+
+    def __repr__(self):
+        return "{}(gamma={}, vec={})".format(self.__class__.__name__, self.gamma, self.vec)

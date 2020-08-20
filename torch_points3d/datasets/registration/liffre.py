@@ -38,12 +38,14 @@ def read_mesh_vertices(filename):
     return vertices, normals
 
 
-class Liffre(Dataset):
+class Liffre(Dataset, GeneralFragment):
 
     def __init__(self,
                  root,
                  train=True,
                  self_supervised=True,
+                 is_head=True,
+                 is_tail=False,
                  transform=None,
                  pre_transform=None,
                  pre_filter=None,
@@ -62,10 +64,17 @@ class Liffre(Dataset):
         self.max_dist_overlap = max_dist_overlap
         self.size = 0
         self.num_pos_pairs = num_pos_pairs
+        self.mode = ""
+        assert is_head or is_tail
         if(train):
-            self.mode = "train"
+            self.mode = self.mode + "train"
         else:
-            self.mode = "val"
+            self.mode = self.mode + "val"
+        if(is_head):
+            self.mode = self.mode + "_head"
+        if(is_tail):
+            self.mode = self.mode + "_tail"
+
         super(Liffre, self).__init__(root, transform, pre_transform, pre_filter)
         self.size = len(os.listdir(osp.join(self.processed_dir, self.mode, 'matches')))
 
@@ -156,48 +165,7 @@ class Liffre(Dataset):
         self._list_pair_fragments(self.mode)
 
     def __getitem__(self, idx):
-        r"""get pairs of fragments"""
-        path_match = osp.join(self.processed_dir, self.mode, 'matches')
-        match = np.load(osp.join(path_match, "matches{:06d}.npy".format(idx)), allow_pickle=True).item()
-        data_source = torch.load(match["path_source"]).to(torch.float)
-        data_target = torch.load(match["path_target"]).to(torch.float)
-        new_pair = torch.zeros(0, 2)
-        while len(new_pair) < 100:
-            i = np.random.randint(0, len(data_source.pos))
-            radius = np.random.random() * (self.max_block_size - self.min_block_size) + self.min_block_size
-            point = data_source.pos[i].view(1, 3)
-            ind, dist = ball_query(point,
-                                   data_source.pos,
-                                   radius=radius,
-                                   max_num=-1, mode=1, sorted=True)
-            ind_s = ind[dist[:, 0] >= 0][:, 1]
-            ind_, dist_ = ball_query(data_source.pos[ind_s],
-                                     data_target.pos,
-                                     radius=self.max_dist_overlap,
-                                     max_num=1, mode=1, sorted=True)
-            ind_ind_s = ind_[dist_[:, 0] >= 0][:, 0]
-            ind_t = ind_[dist_[:, 0] >= 0][:, 1]
-
-            new_pair = torch.stack((ind_s[ind_ind_s], ind_t)).T
-
-        if self.transform is not None:
-            data_source = self.transform(data_source)
-            data_target = self.transform(data_target)
-
-        if(hasattr(data_source, "multiscale")):
-            batch = MultiScalePair.make_pair(data_source, data_target)
-        else:
-            batch = Pair.make_pair(data_source, data_target)
-        pair = tracked_matches(data_source, data_target, new_pair)
-        batch.pair_ind = pair
-        num_pos_pairs = len(batch.pair_ind)
-        if self.num_pos_pairs < len(batch.pair_ind):
-            num_pos_pairs = self.num_pos_pairs
-
-        rand_ind = torch.randperm(len(batch.pair_ind))[:num_pos_pairs]
-        batch.pair_ind = batch.pair_ind[rand_ind]
-        batch.size_pair_ind = torch.tensor([num_pos_pairs])
-        return batch.contiguous()
+        return self.get_fragment(idx)
 
     def __len__(self):
         return self.size
@@ -216,6 +184,8 @@ class LiffreDataset(BaseSiameseDataset):
             root=self._data_path,
             train=True,
             self_supervised=dataset_opt.self_supervised,
+            is_head=dataset_opt.is_head,
+            is_tail=dataset_opt.is_tail,
             pre_transform=pre_transform,
             transform=train_transform,
             pre_filter=pre_filter,
@@ -229,6 +199,8 @@ class LiffreDataset(BaseSiameseDataset):
             root=self._data_path,
             train=False,
             self_supervised=False,
+            is_head=True,
+            is_tail=False,
             pre_transform=pre_transform,
             transform=test_transform,
             pre_filter=pre_filter,
