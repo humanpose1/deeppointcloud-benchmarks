@@ -58,7 +58,10 @@ class GeneralFragment(object):
         if(not self.self_supervised):
             data_source = torch.load(match["path_source"]).to(torch.float)
             data_target = torch.load(match["path_target"]).to(torch.float)
-            new_pair = torch.from_numpy(match["pair"])
+            if(hasattr(match, "pair")):
+                new_pair = torch.from_numpy(match["pair"])
+            else:
+                new_pair = self.generate_pair(data_source, data_target)
         else:
             if(random.random() < 0.5):
                 data_source_o = torch.load(match["path_source"]).to(torch.float)
@@ -89,26 +92,31 @@ class GeneralFragment(object):
             else:
                 data_source = data_source_o
                 data_target = data_target_o
-            pos = data_source.pos
-            i = torch.randint(0, len(pos), (1,))
-            size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block
-            point = pos[i].view(1, 3)
-            ind, dist = ball_query(point,
-                                   pos,
-                                   radius=size_block,
-                                   max_num=-1,
-                                   mode=1)
-            _, col = ind[dist[:, 0] > 0].t()
-            ind_t, dist_t = ball_query(data_target.pos,
-                                       pos[col],
-                                       radius=self.max_dist_overlap,
-                                       max_num=1,
-                                       mode=1)
-            col_target, ind_col = ind_t[dist_t[:, 0] > 0].t()
-            col = col[ind_col]
-            new_pair = torch.stack((col, col_target)).T
+            new_pair = self.generate_pair(data_source, data_target)
             len_col = len(new_pair)
         return data_source, data_target, new_pair
+
+    def generate_pair(self, data_source, data_target):
+        pos = data_source.pos
+        i = torch.randint(0, len(pos), (1,))
+        size_block = random.random()*(self.max_size_block - self.min_size_block) + self.min_size_block
+        point = pos[i].view(1, 3)
+        ind, dist = ball_query(point,
+                               pos,
+                               radius=size_block,
+                               max_num=-1,
+                               mode=1)
+        _, col = ind[dist[:, 0] > 0].t()
+        ind_t, dist_t = ball_query(data_target.pos,
+                                   pos[col],
+                                   radius=self.max_dist_overlap,
+                                   max_num=1,
+                                   mode=1)
+        col_target, ind_col = ind_t[dist_t[:, 0] > 0].t()
+        col = col[ind_col]
+        new_pair = torch.stack((col, col_target)).T
+
+        return new_pair
 
     def get_fragment(self, idx):
 

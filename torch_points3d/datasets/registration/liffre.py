@@ -76,7 +76,9 @@ class Liffre(Dataset, GeneralFragment):
             self.mode = self.mode + "_tail"
 
         super(Liffre, self).__init__(root, transform, pre_transform, pre_filter)
-        self.size = len(os.listdir(osp.join(self.processed_dir, self.mode, 'matches')))
+        self.path_match = osp.join(self.processed_dir, self.mode, "matches")
+        self.list_fragment = [f for f in os.listdir(self.path_match) if "matches" in f]
+
 
     @property
     def raw_file_names(self):
@@ -168,7 +170,7 @@ class Liffre(Dataset, GeneralFragment):
         return self.get_fragment(idx)
 
     def __len__(self):
-        return self.size
+        return len(self.list_fragment)
 
 
 class LiffreDataset(BaseSiameseDataset):
