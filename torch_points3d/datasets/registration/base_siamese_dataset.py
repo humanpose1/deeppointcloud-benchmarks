@@ -61,7 +61,10 @@ class GeneralFragment(object):
             if(hasattr(match, "pair")):
                 new_pair = torch.from_numpy(match["pair"])
             else:
-                new_pair = self.generate_pair(data_source, data_target)
+                len_col = 0
+                while(len_col < self.min_points):
+                    new_pair = self.generate_pair(data_source, data_target)
+                    len_col = len(new_pair)
         else:
             if(random.random() < 0.5):
                 data_source_o = torch.load(match["path_source"]).to(torch.float)

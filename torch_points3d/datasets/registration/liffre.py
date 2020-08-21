@@ -49,18 +49,20 @@ class Liffre(Dataset, GeneralFragment):
                  transform=None,
                  pre_transform=None,
                  pre_filter=None,
-                 min_block_size=0.1,
-                 max_block_size=0.5,
+                 min_size_block=0.1,
+                 max_size_block=0.5,
                  max_dist_overlap=5e-3,
-                 num_pos_pairs=1024
+                 num_pos_pairs=1024,
+                 min_points=500,
     ):
         """
         Liffre Dataset for
         """
-
+        self.is_online_matching = False
+        self.min_points = min_points
         self.self_supervised = self_supervised
-        self.min_block_size = min_block_size
-        self.max_block_size = max_block_size
+        self.min_size_block = min_size_block
+        self.max_size_block = max_size_block
         self.max_dist_overlap = max_dist_overlap
         self.size = 0
         self.num_pos_pairs = num_pos_pairs
@@ -191,10 +193,11 @@ class LiffreDataset(BaseSiameseDataset):
             pre_transform=pre_transform,
             transform=train_transform,
             pre_filter=pre_filter,
-            min_block_size=dataset_opt.min_block_size,
-            max_block_size=dataset_opt.max_block_size,
+            min_size_block=dataset_opt.min_size_block,
+            max_size_block=dataset_opt.max_size_block,
             max_dist_overlap=dataset_opt.max_dist_overlap,
-            num_pos_pairs=dataset_opt.num_pos_pairs
+            num_pos_pairs=dataset_opt.num_pos_pairs,
+            min_points=dataset_opt.min_points
             )
 
         self.val_dataset = Liffre(
@@ -206,10 +209,11 @@ class LiffreDataset(BaseSiameseDataset):
             pre_transform=pre_transform,
             transform=test_transform,
             pre_filter=pre_filter,
-            min_block_size=dataset_opt.min_block_size,
-            max_block_size=dataset_opt.max_block_size,
+            min_size_block=dataset_opt.min_size_block,
+            max_size_block=dataset_opt.max_size_block,
             max_dist_overlap=dataset_opt.max_dist_overlap,
-            num_pos_pairs=dataset_opt.num_pos_pairs
+            num_pos_pairs=dataset_opt.num_pos_pairs,
+            min_points=dataset_opt.min_points
         )
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):

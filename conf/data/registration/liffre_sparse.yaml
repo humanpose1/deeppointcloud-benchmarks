@@ -4,13 +4,13 @@ data:
   dataroot: data
   name: Liffre
   first_subsampling: 0.1
-  is_online_matching: false
   self_supervised: False
   is_head: True
   is_tail: False
-  max_block_size: 7
-  min_block_size: 2
-  max_dist_overlap: 0.2
+  max_size_block: 5
+  min_size_block: 4
+  max_dist_overlap: 0.4
+  min_points: 2000
   num_pos_pairs: 30000
   tau_1: 0.5
   tau_2: 0.05
@@ -36,7 +36,6 @@ data:
         rot_x: 5
         rot_y: 5
         rot_z: 180
-    -transform:
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
