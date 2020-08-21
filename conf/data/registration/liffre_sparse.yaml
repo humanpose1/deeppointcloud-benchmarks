@@ -73,6 +73,12 @@ data:
     - transform: AddSpecularity
       params:
         gamma: 40
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 5
+        rot_y: 5
+        rot_z: 360
     - transform: XYZFeature
       params:
         add_x: True
