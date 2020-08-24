@@ -48,6 +48,7 @@ data:
       params:
         add_to_x: True
         feat_name: 'spec'
+
   val_transform:
     - transform: SaveOriginalPosId
     - transform: AddSpecularity
@@ -68,6 +69,7 @@ data:
       params:
         add_to_x: True
         feat_name: 'spec'
+
   test_transform:
     - transform: SaveOriginalPosId
     - transform: AddSpecularity
