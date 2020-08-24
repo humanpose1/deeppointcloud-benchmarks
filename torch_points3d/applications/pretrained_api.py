@@ -134,5 +134,29 @@ class PretainedRegistry(object):
             return model
 
     @staticmethod
+    def from_file(path, weight_name="latest", mock_property=None):
+        """
+        create a registry from a file.
+        """
+        weight_name = weight_name if weight_name is not None else "latest"
+        path_dir, name = os.path.split(path)
+
+        checkpoint: ModelCheckpoint = ModelCheckpoint(
+            path_dir, name, weight_name if weight_name is not None else "latest", resume=False,
+        )
+        dataset = checkpoint.data_config
+
+        if mock_property is not None:
+            for k, v in mock_property.items():
+                dataset[k] = v
+
+        else:
+            dataset = instantiate_dataset(checkpoint.data_config)
+
+        model: BaseModel = checkpoint.create_model(dataset, weight_name=weight_name)
+        BaseDataset.set_transform(model, checkpoint.data_config)
+        return model
+
+    @staticmethod
     def available_models():
         return PretainedRegistry.MODELS.keys()

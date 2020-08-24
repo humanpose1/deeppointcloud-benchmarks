@@ -35,7 +35,7 @@ data:
         apply_rotation: True
         rot_x: 5
         rot_y: 5
-        rot_z: 180
+        rot_z: 360
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
