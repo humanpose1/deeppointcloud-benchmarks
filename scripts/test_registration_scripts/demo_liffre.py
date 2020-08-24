@@ -51,8 +51,8 @@ def compute_color_from_features(list_feat):
 if __name__ == "__main__":
 
     path_file = os.path.dirname(os.path.abspath(__file__))
-    path_s = osp.join(path_file, "..", "..", "notebooks", "data", "liffre", "L605D.ply")
-    path_t = osp.join(path_file, "..", "..", "notebooks", "data", "liffre", "L722D.ply")
+    path_s = osp.join(path_file, "..", "..", "notebooks", "data", "liffre", "L791D.ply")
+    path_t = osp.join(path_file, "..", "..", "notebooks", "data", "liffre", "L850D.ply")
 
     pcd_s, norm_s, color_s = read_ply(path_s)
     pcd_t, norm_t, color_t = read_ply(path_t)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print(data_s)
     rand_s = torch.randint(0, len(output_s), (5000,))
     rand_t = torch.randint(0, len(output_t), (5000,))
-    matches = get_matches(output_s[rand_s], output_t[rand_t])
+    matches = get_matches(output_s[rand_s], output_t[rand_t], sym=True)
     T_est = fast_global_registration(data_s.pos[rand_s][matches[:, 0]], data_t.pos[rand_t][matches[:, 1]])
     T_teaser = teaser_pp_registration(
         data_s.pos[rand_s][matches[:, 0]], data_t.pos[rand_t][matches[:, 1]], noise_bound=0.1
