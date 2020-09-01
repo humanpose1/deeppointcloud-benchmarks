@@ -379,10 +379,11 @@ class AddSpecularity(object):
         the fixed vector to which we compare the normal
     """
 
-    def __init__(self, gamma: float = 5, vec: List[float] = [0.0, 0.0, 1.0]):
+    def __init__(self, gamma: float = 5, vec: List[float] = [0.0, 0.0, 1.0], is_rotate=True):
 
         self.gamma = gamma
         self.vec = torch.tensor(vec)
+        self.is_rotate = is_rotate
 
     def __call__(self, data):
 
@@ -392,4 +393,7 @@ class AddSpecularity(object):
         return data
 
     def __repr__(self):
-        return "{}(gamma={}, vec={})".format(self.__class__.__name__, self.gamma, self.vec)
+        return "{}(gamma={}, vec={}, is_rotate={})".format(self.__class__.__name__,
+                                                           self.gamma,
+                                                           self.vec,
+                                                           self.is_rotate)
