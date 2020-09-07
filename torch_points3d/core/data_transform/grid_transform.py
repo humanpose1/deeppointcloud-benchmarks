@@ -166,7 +166,7 @@ class SaveOriginalPosId:
 
 
 class ElasticDistortion:
-    """Apply elastic distortion on sparse coordinate space. First projects the position onto a 
+    """Apply elastic distortion on sparse coordinate space. First projects the position onto a
     voxel grid and then apply the distortion to the voxel grid.
 
     Parameters
@@ -245,3 +245,41 @@ class ElasticDistortion:
             self._magnitude,
             self._spatial_resolution,
         )
+
+
+
+class RandomGridSampling3D(object):
+    """ Clusters points into voxels with  random size/
+    Parameters
+    ----------
+    min_size: float
+        Size of a voxel (in each dimension).
+    max_size: float
+        Size of a voxel (in each dimension).
+    quantize_coords: bool
+        If True, it will convert the points into their associated sparse coordinates within the grid and store
+        the value into a new `coords` attribute
+    mode: string:
+        The mode can be either `last` or `mean`.
+        If mode is `mean`, all the points and their features within a cell will be averaged
+        If mode is `last`, one random points per cell will be selected with its associated features
+    """
+    def __init__(self,
+                 min_size,
+                 max_size,
+                 quantize_coords: bool = False,
+                 mode="mean",
+                 verbose: bool = False):
+        self.min_size = min_size
+        self.max_size = max_size
+        self.quantize_coords = quantize_coords
+        self.mode = mode
+        self.verbose = verbose
+
+    def __call__(self, data):
+        assert self.max_size > self.min_size
+        size = np.random.random() * (self.max_size - self.min_size) + self.min_size
+        transform = GridSampling3D(size,
+                                   quantize_coords=self.quantize_coords,
+                                   mode=self.mode, verbose=self.verbose)
+        return transform(data)
