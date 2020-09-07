@@ -33,7 +33,10 @@ data:
         size: ${data.first_subsampling}
   train_transform:
     - transform: SaveOriginalPosId
-    - transform: RandomGridSampling
+    - transform: RandomGridSampling3D
+      params:
+        min_size: 0.02
+        max_size: 0.08
     - transform: FixedPoints
       lparams: [20000]
     - transform: RandomNoise
@@ -49,10 +52,7 @@ data:
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
-    - transform: RandomGridSampling3D
-      params:
-        min_size: 0.02
-        max_size: 0.08
+
 
 
   val_transform:

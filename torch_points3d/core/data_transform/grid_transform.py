@@ -247,7 +247,6 @@ class ElasticDistortion:
         )
 
 
-
 class RandomGridSampling3D(object):
     """ Clusters points into voxels with  random size/
     Parameters

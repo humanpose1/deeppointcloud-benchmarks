@@ -1,11 +1,12 @@
 models:
   EMHS_0:
     class: emhs.EquiMHS
-    conv_type: "PARTIAL"
+    conv_type: "PARTIAL_DENSE"
     loss_mode: "match"
     define_constants:
       in_feat: 32
       out_feat: 32
+      block: ResBlock
     unet:
       model_type: "Minkowski"
       is_center: True

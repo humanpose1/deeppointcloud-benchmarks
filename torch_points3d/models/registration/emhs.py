@@ -3,13 +3,14 @@ from .base import FragmentBaseModel
 
 from torch_geometric.data import Data, Batch
 from torch_scatter import scatter_max, scatter_mean
-from torch_geometric.nn import voxel_grid, consecutive_cluster
+from torch_geometric.nn import voxel_grid
+from torch_geometric.nn.pool.consecutive import consecutive_cluster
 
 from torch_points3d.applications import models
 from torch_points3d.core.common_modules import MLP
 
 
-class EquiModule(torch.nn.module):
+class EquiModule(torch.nn.Module):
     def __init__(self, pre_pointnet, unet, post_pointnet, add_pos=True, is_center=True, voxel_size=0.1, pool="mean"):
         super().__init__()
         self.pre_pointnet = pre_pointnet
@@ -22,9 +23,9 @@ class EquiModule(torch.nn.module):
 
     def pool_fn(self, x, cluster, mode="mean"):
         if mode == "mean":
-            return scatter_mean(x, cluster)
+            return scatter_mean(x, cluster, dim=0)
         if mode == "max":
-            return scatter_max(x, cluster)
+            return scatter_max(x, cluster, dim=0)
         else:
             raise NotImplementedError("the mode of pooling is not present")
 
@@ -40,8 +41,10 @@ class EquiModule(torch.nn.module):
         return cluster, new_batch, new_coords
 
     def forward(self, data):
+
         cluster, pre_batch, pre_coords = self.cluster_data(data.pos, data.batch)
         pre_pos = self.pool_fn(data.pos, cluster, mode="mean")
+
         first_x = data.x
         if self.add_pos:
             if self.is_center:
@@ -50,7 +53,7 @@ class EquiModule(torch.nn.module):
             else:
                 pos = data.pos
             if data.x is not None:
-                first_x = torch.cat([data.x, pos])
+                first_x = torch.cat([data.x, pos], 1)
             else:
                 first_x = pos
         x = self.pre_pointnet(first_x)
@@ -58,7 +61,7 @@ class EquiModule(torch.nn.module):
         pre_x = self.pool_fn(x, cluster, mode=self.pool)
         pre_data = Batch(x=pre_x, pos=pre_pos, coords=pre_coords, batch=pre_batch)
         pre_data = self.unet(pre_data)
-        post_x = torch.cat([first_x, pre_data.x[cluster]])
+        post_x = torch.cat([first_x, pre_data.x[cluster]], 1)
         post_x = self.post_pointnet(post_x)
         post_pos = data.pos
         post_batch = data.batch
