@@ -76,17 +76,12 @@ class EquiModule(torch.nn.Module):
         pre_x = self.pool_fn(x, cluster, mode=self.pool)
         pre_data = Batch(x=pre_x, pos=pre_pos, coords=pre_coords, batch=pre_batch)
         pre_data = self.unet(pre_data)
-        post_x = torch.cat([first_x, pre_data.x[cluster]], 1)
+        post_x = torch.cat([first_x, x, pre_data.x[cluster]], 1)
         post_x = self.post_pointnet(post_x)
         post_pos = data.pos
         post_batch = data.batch
         post_data = Batch(x=post_x, pos=post_pos, batch=post_batch)
         return post_data
-
-
-class AttentiveModule(torch.nn.Module):
-    def __init__(self, unet, nn):
-        self.unet = unet
 
 
 class BaseEMHS(FragmentBaseModel):
