@@ -3,9 +3,26 @@ models:
     class: emhs.EMHS_Model
     conv_type: "SPARSE"
     model_name: "EquivariantMapNetwork"
-    dim_feat: [3, 64, 64, 64, 32]
-    num_layer: [1, 1, 1, 1]
-    grid_size: [0.1, 0.2, 0.4, 0.8]
+    dim_feat: [3, 64, 32]
+    num_layer: [3, 1]
+    grid_size: [0.08, 0.16]
+    normalize_feature: True
+    loss_mode: "match"
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+  SuperEMHS:
+    class: emhs.EMHS_Model
+    conv_type: "SPARSE"
+    model_name: "EquivariantMapNetwork"
+    dim_feat: [3, 64, 32]
+    num_layer: [3, 2]
+    grid_size: [0.1, 0.2]
     normalize_feature: True
     loss_mode: "match"
     metric_loss:

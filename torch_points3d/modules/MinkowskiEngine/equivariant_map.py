@@ -21,6 +21,8 @@ class OuterEquivariantMap(nn.Module):
             input_nc, output_nc, kernel_size=size_conv, stride=1, dilation=dilation, dimension=D
         )
 
+        self.conv = torch.nn.Linear(input_nc + output_nc, output_nc)
+
     def _prepare_and_pool(self, data):
         assert hasattr(data, "coords")
         assert hasattr(data, "cluster")
@@ -35,7 +37,8 @@ class OuterEquivariantMap(nn.Module):
 
         st = self._prepare_and_pool(data)
         out = self.conv3d(st)
-        data.x = out.F[data.cluster]
+        u = self.conv(torch.cat([data.x, out.F[data.cluster]], -1))
+        data.x = u
         return data
 
 
