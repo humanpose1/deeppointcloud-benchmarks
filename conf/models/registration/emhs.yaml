@@ -12,8 +12,9 @@ models:
       is_center: True
       add_pos: True
       voxel_size: 0.1
-      nn_pre: [FEAT + 3, 8, 16, 16, in_feat]
-      nn_post: [out_feat + 3, 64, in_feat]
+      nn_pre: [FEAT + 6, 64, 64, in_feat]
+      nn_post: [out_feat + 6, 64, 64,  in_feat]
+      pool_mode: "attention"
       config:
         down_conv:
           block: block
