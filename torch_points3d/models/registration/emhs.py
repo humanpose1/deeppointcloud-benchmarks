@@ -8,10 +8,12 @@ from torch_geometric.nn.pool.consecutive import consecutive_cluster
 
 from torch_points3d.applications import models
 from torch_points3d.core.common_modules import MLP
+from torch_points3d.modules.attention.attention import AttMLP
 
 
 class AttPooling(torch.nn.Module):
     def __init__(self, d):
+        super(AttPooling, self).__init__()
         self.lin = torch.nn.Linear(d, d, bias=False)
 
     def forward(self, x, cluster):
@@ -76,7 +78,7 @@ class EquiModule(torch.nn.Module):
         pre_x = self.pool_fn(x, cluster, mode=self.pool)
         pre_data = Batch(x=pre_x, pos=pre_pos, coords=pre_coords, batch=pre_batch)
         pre_data = self.unet(pre_data)
-        post_x = torch.cat([first_x, x, pre_data.x[cluster]], 1)
+        post_x = torch.cat([first_x, pre_data.x[cluster]], 1)
         post_x = self.post_pointnet(post_x)
         post_pos = data.pos
         post_batch = data.batch
@@ -133,7 +135,7 @@ class BaseEMHS(FragmentBaseModel):
 
 class EquiMHS(BaseEMHS):
     def __init__(self, option, model_type, dataset, modules):
-        BaseEMHS.__init__(option, model_type, dataset, modules)
+        BaseEMHS.__init__(self, option, model_type, dataset, modules)
         unet_option = option.unet
         input_nc = unet_option.nn_pre[-1]
         unet_cls = getattr(models, unet_option.model_type)
