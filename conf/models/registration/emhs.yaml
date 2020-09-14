@@ -4,9 +4,9 @@ models:
     conv_type: "SPARSE"
     model_name: "EquivariantMapNetwork"
     dim_feat: [3, 64, 32]
-    num_layer: [3, 1]
-    grid_size: [0.08, 0.16]
-    L: [2, 2]
+    num_layer: [10, 10]
+    grid_size: [0.1, 0.2]
+    L: [1, 1]
     normalize_feature: True
     loss_mode: "match"
     metric_loss:
