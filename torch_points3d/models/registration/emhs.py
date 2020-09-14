@@ -13,7 +13,12 @@ class EMHS_Model(FragmentBaseModel):
         FragmentBaseModel.__init__(self, option)
 
         self.model = SuperEMHS(
-            D=3, dilation=1, dim_feat=option.dim_feat, num_layer=option.num_layer, grid_size=option.grid_size
+            D=3,
+            dilation=1,
+            dim_feat=option.dim_feat,
+            num_layer=option.num_layer,
+            grid_size=option.grid_size,
+            L=option.L,
         )
         self.normalize_feature = option.normalize_feature
         self.mode = option.loss_mode

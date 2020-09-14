@@ -6,6 +6,7 @@ models:
     dim_feat: [3, 64, 32]
     num_layer: [3, 1]
     grid_size: [0.08, 0.16]
+    L: [2, 2]
     normalize_feature: True
     loss_mode: "match"
     metric_loss:

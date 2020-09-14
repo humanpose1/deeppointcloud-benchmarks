@@ -4,7 +4,7 @@ import MinkowskiEngine as ME
 from .common import ConvType, NormType
 
 from torch_points3d.utils.config import is_list
-from torch_points3d.core.common_modules.base_modules import FastBatchNorm1d
+from torch_points3d.core.common_modules.base_modules import FastBatchNorm1d, MLP
 
 from torch_geometric.data import Batch
 from torch_geometric.nn.pool.consecutive import consecutive_cluster
@@ -47,9 +47,11 @@ class InnerEquivariantMap(nn.Module):
     TODO: add attention mechanism
     """
 
-    def __init__(self, input_nc, output_nc, L=10, D=3):
+    def __init__(self, input_nc, output_nc, L=1, D=3):
         super(InnerEquivariantMap, self).__init__()
-        self.conv1 = nn.Linear(input_nc, output_nc)
+        channels = [input_nc] + [output_nc for _ in range(L)]
+        # self.conv1 = nn.Linear(input_nc, output_nc)
+        self.conv1 = MLP(channels)
 
     def forward(self, data):
 
@@ -59,7 +61,7 @@ class InnerEquivariantMap(nn.Module):
 
 class EMLayer(nn.Module):
     def __init__(
-        self, input_nc, output_nc, L=10, size_conv=3, dilation=1, bn_momentum=0.02, D=3,
+        self, input_nc, output_nc, L=2, size_conv=3, dilation=1, bn_momentum=0.02, D=3,
     ):
         super(EMLayer, self).__init__()
         self.oem = OuterEquivariantMap(input_nc, output_nc, dilation, size_conv, D)
@@ -75,7 +77,7 @@ class EMLayer(nn.Module):
 
 class ResEMBlock(nn.Module):
     def __init__(
-        self, input_nc, output_nc, L=10, dilation=1, size_conv=3, bn_momentum=0.02, D=3,
+        self, input_nc, output_nc, L=2, dilation=1, size_conv=3, bn_momentum=0.02, D=3,
     ):
         super(ResEMBlock, self).__init__()
         self.em1 = EMLayer(
@@ -93,12 +95,12 @@ class ResEMBlock(nn.Module):
 
 
 class EquivariantMapNetwork(nn.Module):
-    def __init__(self, input_nc=3, dim_feat=64, output_nc=32, grid_size=0.1, num_layer=20, dilation=1, D=3):
+    def __init__(self, input_nc=3, dim_feat=64, output_nc=32, grid_size=0.1, L=2, num_layer=20, dilation=1, D=3):
         super(EquivariantMapNetwork, self).__init__()
-        self.layer1 = EMLayer(input_nc, dim_feat, dilation=dilation, D=D)
+        self.layer1 = EMLayer(input_nc, dim_feat, dilation=dilation, D=D, L=1)
         self.list_res = nn.ModuleList()
         for _ in range(num_layer):
-            self.list_res.append(ResEMBlock(dim_feat, dim_feat, dilation=dilation, D=D))
+            self.list_res.append(ResEMBlock(dim_feat, dim_feat, dilation=dilation, D=D, L=L))
         self._grid_size = grid_size
 
     def _prepare_data(self, data):
@@ -120,7 +122,13 @@ class EquivariantMapNetwork(nn.Module):
 
 class SuperEMHS(nn.Module):
     def __init__(
-        self, dim_feat=[3, 64, 64, 64, 32], num_layer=[4, 4, 4, 1], grid_size=[0.1, 0.2, 0.4, 0.8], dilation=1, D=3
+        self,
+        dim_feat=[3, 64, 64, 64, 32],
+        num_layer=[4, 4, 4, 1],
+        grid_size=[0.1, 0.2, 0.4, 0.8],
+        dilation=1,
+        D=3,
+        L=[1, 2, 2, 2],
     ):
         super(SuperEMHS, self).__init__()
         self.list_nn = nn.ModuleList()
@@ -132,6 +140,7 @@ class SuperEMHS(nn.Module):
                     dim_feat[i],
                     grid_size=grid_size[i - 1],
                     num_layer=num_layer[i - 1],
+                    L=L[i - 1],
                     dilation=dilation,
                     D=D,
                 )
