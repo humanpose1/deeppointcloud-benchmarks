@@ -149,3 +149,63 @@ models:
         num_hn_samples: 256
         pos_thresh: 0.1
         neg_thresh: 1.4
+
+
+
+  PPFEMHS_0:
+    class: emhs.EMHS_Model
+    conv_type: "PARTIAL_DENSE"
+    define_constants:
+      in_grid_size: ${data.first_subsampling}
+      in_feat: 64
+      bn_momentum: 0.02
+    ppf_param:
+      aggr: "max"
+      local_nn: [4, in_feat, in_feat, in_feat, in_feat//2]
+    down_conv:
+      module_name: EMHSBlock
+      down_conv_nn:
+        [
+          [FEAT + in_feat//2, in_feat],
+          [in_feat, in_feat],
+          [in_feat, in_feat],
+          [in_feat, in_feat]
+        ]
+      grid_size:
+        [in_grid_size, in_grid_size, in_grid_size, 2*in_grid_size]
+      prev_grid_size:
+        [in_grid_size, in_grid_size, in_grid_size, in_grid_size]
+      bn_momentum:
+        [bn_momentum, bn_momentum, bn_momentum, bn_momentum]
+      voxel_size:
+        [0.1, 0.1, 0.1, 0.2]
+      num_layer_mlp:
+        [4, 2, 2, 2]
+      num_layer_conv:
+        [0, 2, 4, 4]
+    up_conv:
+      module_name: FPModule_PD
+      up_conv_nn:
+        [
+          [in_feat + in_feat, in_feat],
+          [in_feat + in_feat, in_feat//2]
+        ]
+      skip: True
+      up_k: [1,1,1,1]
+      bn_momentum:
+        [
+          bn_momentum,
+          bn_momentum,
+          bn_momentum,
+          bn_momentum,
+        ]
+
+    normalize_feature: True
+    loss_mode: "match"
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4

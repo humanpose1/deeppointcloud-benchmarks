@@ -2,6 +2,7 @@ import torch
 
 from torch_points3d.modules.MinkowskiEngine.equivariant_map import *
 from torch_points3d.core.base_conv.partial_dense import *
+from torch_points3d.modules.PointNet.dense_modules import DenseMiniPointNet
 from torch_points3d.models.base_architectures import UnwrappedUnetBasedModel
 from torch_points3d.models.registration.base import FragmentBaseModel
 from torch_points3d.models.registration.minkowski import BaseMinkowski
@@ -49,7 +50,7 @@ class EMHS_Model(FragmentBaseModel, UnwrappedUnetBasedModel):
             input = Data(pos=self.xyz)
             return input
 
-    def apply_nn(self, input):
+    def _apply_nn(self, input):
         stack_down = []
         data = input
         for i in range(len(self.down_modules) - 1):
@@ -74,3 +75,24 @@ class EMHS_Model(FragmentBaseModel, UnwrappedUnetBasedModel):
             return output / (torch.norm(output, p=2, dim=1, keepdim=True) + 1e-20)
         else:
             return output
+
+    def apply_nn(self, input):
+        return self._apply_nn(input)
+
+
+class PPFEMHS(EMHS_Model):
+
+    """
+    perform ppfnet before using EMHS
+    """
+
+    def __init__(self, option, model_type, dataset, modules):
+        super(PPFEMHS, self).__init__(option, model_type, dataset, modules)
+        self.ppfnet = DenseMiniPointNet(**option.ppf_param)
+
+    def apply_nn(self, input):
+        assert hasattr(input, "ppf")
+        input_feat = self.ppfnet(input.ppf)  # N x K x 4 -> N x D
+
+        input.x = torch.cat([input.x, input_feat], 1)
+        return self._apply_nn(input)

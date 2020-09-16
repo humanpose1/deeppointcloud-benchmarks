@@ -383,7 +383,7 @@ def compute_point_pair_feature(points, norm, idx):
     """
     points of size N x 3
     idx of size N x K
-    norm of size
+    norm of size N x 3
     """
     n, k = idx.shape
     centers = points.unsqueeze(1).expand(n, k, 3)  # N x K x 3
@@ -397,7 +397,6 @@ def compute_point_pair_feature(points, norm, idx):
     n1n2 = compute_angle(normals, norm_neigh).unsqueeze(-1)
     phi = torch.cat((nd, n1d, n2d, n1n2), -1)  # N x K x 4
     return phi
-
 
 
 class PPFFeature(object):
