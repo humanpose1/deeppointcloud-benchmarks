@@ -19,6 +19,7 @@ from torch_points3d.utils.transform_utils import SamplingStrategy
 from torch_points3d.utils.config import is_list
 from torch_points3d.utils import is_iterable
 from torch_points3d.utils.geometry import euler_angles_to_rotation_matrix
+from torch_points_kernels.points_cpu import ball_query
 
 
 class Random3AxisRotation(object):
@@ -366,3 +367,64 @@ class XYZFeature(object):
 
     def __repr__(self):
         return "{}(axis={})".format(self.__class__.__name__, self._axis_names)
+
+
+
+def compute_angle(u, v):
+    """
+    u and v are vectors of size B x N x 3
+    return angle of size B x N
+    """
+    cos_theta = (u*v).sum(-1)  # size B x N
+    sin_theta = torch.cross(u, v).norm(p=2, dim=-1)  # size B x N
+    return torch.atan2(sin_theta, cos_theta)
+
+def compute_point_pair_feature(points, norm, idx):
+    """
+    points of size N x 3
+    idx of size N x K
+    norm of size
+    """
+    n, k = idx.shape
+    centers = points.unsqueeze(1).expand(n, k, 3)  # N x K x 3
+    normals = norm.unsqueeze(1).expand(n, k, 3)  # N x K x 3
+    points_neigh = points[idx]  # N x K x 3
+    norm_neigh = points[idx]  # N x K x 3
+    d = points_neigh - centers
+    nd = torch.norm(d, p=2, dim=-1).unsqueeze(-1)
+    n1d = compute_angle(normals, d).unsqueeze(-1)
+    n2d = compute_angle(norm_neigh, d).unsqueeze(-1)
+    n1n2 = compute_angle(normals, norm_neigh).unsqueeze(-1)
+    phi = torch.cat((nd, n1d, n2d, n1n2), -1)  # N x K x 4
+    return phi
+
+
+
+class PPFFeature(object):
+
+    """
+    Compute point pair feature for each point cloud for neighbors (using radius search).
+    need normals
+    N x 3 -> N x K x 4
+    ppf is defined in this article: https://arxiv.org/pdf/1802.02669.pdf
+    """
+
+    def __init__(self,
+                 r: float = 0.1,
+                 max_num: int = 80,
+                 is_sorted: bool = False):
+        self.radius = r
+        self.max_num = max_num
+        self.is_sorted = is_sorted
+
+    def __call__(self, data):
+        assert data.norm is not None
+        idx, _ = ball_query(data.pos, data.pos,
+                            self.radius, max_num=self.max_num,
+                            mode=0, sorted=self.is_sorted)
+        data.ppf = compute_point_pair_feature(data.pos, data.norm, idx)
+        return data
+
+    def __repr__(self):
+        return "{}(radius={}, max_num={}, is_sorted={})".format(
+            self.__class__.__name__, self.radius, self.max_num, self.is_sorted)
