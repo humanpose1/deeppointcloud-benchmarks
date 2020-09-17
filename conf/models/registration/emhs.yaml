@@ -118,11 +118,11 @@ models:
       bn_momentum:
         [bn_momentum, bn_momentum, bn_momentum, bn_momentum]
       voxel_size:
-        [0.1, 0.1, 0.1, 0.2]
+        [0.05, 0.1, 0.2, 0.4]
       num_layer_mlp:
-        [4, 2, 2, 2]
+        [2, 2, 2, 2]
       num_layer_conv:
-        [0, 2, 4, 4]
+        [1, 2, 2, 2]
     up_conv:
       module_name: FPModule_PD
       up_conv_nn:
