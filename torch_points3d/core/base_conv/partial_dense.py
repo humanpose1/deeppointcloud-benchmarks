@@ -134,7 +134,7 @@ class FPModule_PD(BaseModule):
         if has_innermost:
             x = torch.gather(data.x, 0, data_skip.batch.unsqueeze(-1).repeat((1, data.x.shape[-1])))
         else:
-            if x.shape != x_skip.shape:
+            if x.shape[0] != x_skip.shape[0]:
                 x = self.upsample_op(data, data_skip, precomputed=pre_data)
 
         if x_skip is not None:
