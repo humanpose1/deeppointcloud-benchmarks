@@ -166,7 +166,7 @@ models:
           [in_feat, 2*in_feat],
           [2*in_feat, 2*in_feat],
           [2*in_feat, in_feat],
-          [in_feat, in_feat//2]
+          [in_feat, in_feat]
         ]
       grid_size:
         [in_grid_size, in_grid_size, in_grid_size, in_grid_size, in_grid_size]
@@ -180,8 +180,26 @@ models:
         [2, 2, 2, 1, 1]
       num_layer_conv:
         [1, 2, 2, 2, 1]
-
-
+    up_conv:
+      module_name: FPModule_PD
+      up_conv_nn:
+        [
+          [in_feat + in_feat, in_feat],
+          [in_feat + in_feat, in_feat],
+          [in_feat + 2 * in_feat, in_feat],
+          [in_feat + 2 * in_feat, in_feat],
+          [in_feat + in_feat, in_feat //2 ]
+        ]
+      skip: True
+      up_k: [1,1,1,1,1]
+      bn_momentum:
+        [
+          bn_momentum,
+          bn_momentum,
+          bn_momentum,
+          bn_momentum,
+          bn_momentum,
+        ]
     normalize_feature: True
     loss_mode: "match"
     metric_loss:
