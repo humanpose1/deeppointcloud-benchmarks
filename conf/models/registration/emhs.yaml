@@ -165,7 +165,6 @@ models:
           [FEAT, in_feat],
           [in_feat, in_feat],
           [in_feat, 2*in_feat],
-          [2*in_feat, 2*in_feat],
           [2*in_feat, 4*in_feat]
         ]
       grid_size:
@@ -173,20 +172,19 @@ models:
       prev_grid_size:
         [in_grid_size, in_grid_size, in_grid_size, in_grid_size, in_grid_size]
       bn_momentum:
-        [bn_momentum, bn_momentum, bn_momentum, bn_momentum, bn_momentum]
+        [bn_momentum, bn_momentum, bn_momentum, bn_momentum]
       voxel_size:
-        [0.05, 0.1, 0.2, 0.4, 0.8]
+        [0.05, 0.2, 0.4, 0.8]
       num_layer_mlp:
-        [1, 1, 1, 1, 1]
+        [1, 1, 1, 1]
       num_layer_conv:
-        [1, 1, 1, 1, 1]
+        [2, 1, 1, 1]
     up_conv:
       module_name: FPModule_PD
       up_conv_nn:
         [
-          [in_feat + 4*in_feat, in_feat],
+          [4*in_feat + 4*in_feat, in_feat],
           [in_feat + 2*in_feat, in_feat],
-          [in_feat + 2 * in_feat, in_feat],
           [in_feat + in_feat, in_feat],
           [in_feat + in_feat, in_feat //2 ]
         ]
