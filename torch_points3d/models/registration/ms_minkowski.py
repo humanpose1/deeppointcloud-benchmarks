@@ -52,14 +52,14 @@ class MS_Minkowski(FragmentBaseModel):
         # Last Layer
         option_unet = option.option_unet
         num_scales = option_unet.num_scales
-        self.unet = [
-            UnetMinkowski(
+        self.unet = nn.ModuleList()
+        for i in range(num_scales):
+            module = UnetMinkowski(
                 option_unet["config_{}".format(i)],
                 grid_size=option_unet.grid_size[i],
                 post_mlp_nn=option_unet.post_mlp_nn,
-            ).cuda()
-            for i in range(num_scales)
-        ]
+            )
+            self.unet.add_module(name=str(i), module=module)
         assert option.mlp_cls is not None
         last_mlp_opt = option.mlp_cls
 
