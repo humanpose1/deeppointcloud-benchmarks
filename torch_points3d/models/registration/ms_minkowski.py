@@ -1,8 +1,41 @@
 import torch
-
+import torch.nn as nn
 from torch.nn import LeakyReLU, Linear, Sequential
-from torch_points3d.models.registration.base import FragmentBaseModel
+
+from torch_geometric.nn.pool.consecutive import consecutive_cluster
+from torch_geometric.nn import voxel_grid
+from torch_geometric.data import Batch
+
+from torch_points3d.applications.minkowski import Minkowski
 from torch_points3d.core.common_modules import FastBatchNorm1d, Seq
+from torch_points3d.core.common_modules import MLP
+from torch_points3d.models.registration.base import FragmentBaseModel
+
+
+class UnetMinkowski(nn.Module):
+    def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[67, 64, 32]):
+        self.unet = Minkowski(architecture="unet", input_nc=input_nc, config=option_unet)
+        self.post_mlp = MLP(post_mlp_nn)
+
+        self._grid_size = grid_size
+
+    def _prepare_data(self, data):
+        coords = torch.round((data.pos) / self._grid_size)
+        cluster = voxel_grid(coords, data.batch, 1)
+        cluster, unique_pos_indices = consecutive_cluster(cluster)
+
+        coords = coords[unique_pos_indices]
+        new_batch = data.batch[unique_pos_indices]
+        new_pos = data.pos[unique_pos_indices]
+        x = data.x[unique_pos_indices]
+        sparse_data = Batch(x=x, pos=new_pos, coords=coords, batch=new_batch)
+        return sparse_data, cluster
+
+    def forward(self, data, **kwargs):
+        d, cluster = self._prepare_data(data.clone())
+        d = self.unet(d)
+        data.x = self.post_mlp(torch.cat([d.x[cluster], data.pos - data.pos.mean(0)], 1))
+        return data
 
 
 class MS_Minkowski(FragmentBaseModel):
@@ -15,8 +48,16 @@ class MS_Minkowski(FragmentBaseModel):
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
         # Last Layer
-
-        self.unet = []
+        option_unet = option.option_unet
+        num_scales = option_unet.num_scales
+        self.unet = [
+            UnetMinkowski(
+                option_unet["option_unet_nn_{}".format(i)],
+                grid_size=option_unet.grid_size[i],
+                post_mlp_nn=option_unet.post_mlp_nn,
+            )
+            for i in range(num_scales)
+        ]
         assert option.mlp_cls is not None
         last_mlp_opt = option.mlp_cls
 
