@@ -93,7 +93,13 @@ class MS_Minkowski(FragmentBaseModel):
 
     def get_input(self):
         if self.match is not None:
-            return self.input, self.input_target
+            input = self.input.clone()
+            input_target = self.input_target.clone()
+            input.ind = self.match[:, 0]
+            input_target.ind = self.match[:, 1]
+            input.size_match = self.size_match
+            input_target.size_match = self.size_match
+            return input, input_target
         else:
             return self.input, None
 
