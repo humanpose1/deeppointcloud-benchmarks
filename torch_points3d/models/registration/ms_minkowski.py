@@ -14,13 +14,14 @@ from torch_points3d.models.registration.base import FragmentBaseModel
 
 class UnetMinkowski(nn.Module):
     def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[67, 64, 32]):
+        nn.Module.__init__(self)
         self.unet = Minkowski(architecture="unet", input_nc=input_nc, config=option_unet)
         self.post_mlp = MLP(post_mlp_nn)
 
         self._grid_size = grid_size
 
     def _prepare_data(self, data):
-        coords = torch.round((data.pos) / self._grid_size)
+        coords = torch.round((data.pos) / self._grid_size).float()
         cluster = voxel_grid(coords, data.batch, 1)
         cluster, unique_pos_indices = consecutive_cluster(cluster)
 
@@ -32,14 +33,15 @@ class UnetMinkowski(nn.Module):
         return sparse_data, cluster
 
     def forward(self, data, **kwargs):
+
         d, cluster = self._prepare_data(data.clone())
-        d = self.unet(d)
+        d = self.unet.forward(d)
         data.x = self.post_mlp(torch.cat([d.x[cluster], data.pos - data.pos.mean(0)], 1))
         return data
 
 
 class MS_Minkowski(FragmentBaseModel):
-    def __init__(self, option, dataset, modules):
+    def __init__(self, option, model_type, dataset, modules):
         FragmentBaseModel.__init__(self, option)
         self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
@@ -52,10 +54,10 @@ class MS_Minkowski(FragmentBaseModel):
         num_scales = option_unet.num_scales
         self.unet = [
             UnetMinkowski(
-                option_unet["option_unet_nn_{}".format(i)],
+                option_unet["config_{}".format(i)],
                 grid_size=option_unet.grid_size[i],
                 post_mlp_nn=option_unet.post_mlp_nn,
-            )
+            ).cuda()
             for i in range(num_scales)
         ]
         assert option.mlp_cls is not None
@@ -64,48 +66,47 @@ class MS_Minkowski(FragmentBaseModel):
         self.FC_layer = Seq()
         for i in range(1, len(last_mlp_opt.nn)):
             self.FC_layer.append(
-                str(i),
                 Sequential(
                     *[
                         Linear(last_mlp_opt.nn[i - 1], last_mlp_opt.nn[i], bias=False),
                         FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
                         LeakyReLU(0.2),
                     ]
-                ),
+                )
             )
 
-        def set_input(self, data, device):
-            self.input, self.input_target = data.to_data()
-            self.input = self.input.to(device)
-            if hasattr(data, "pos_target"):
-                self.input_target = self.input_target.to(device)
-                self.match = data.pair_ind.to(torch.long).to(device)
-                self.size_match = data.size_pair_ind.to(torch.long).to(device)
-            else:
-                self.match = None
+    def set_input(self, data, device):
+        self.input, self.input_target = data.to_data()
+        self.input = self.input.to(device)
+        if hasattr(data, "pos_target"):
+            self.input_target = self.input_target.to(device)
+            self.match = data.pair_ind.to(torch.long).to(device)
+            self.size_match = data.size_pair_ind.to(torch.long).to(device)
+        else:
+            self.match = None
 
-        def get_batch(self):
-            if self.match is not None:
-                return self.input.batch, self.input_target.batch
-            else:
-                return self.input.batch, None
+    def get_batch(self):
+        if self.match is not None:
+            return self.input.batch, self.input_target.batch
+        else:
+            return self.input.batch, None
 
-        def get_input(self):
-            if self.match is not None:
-                return self.input, self.input_target
-            else:
-                return self.input, None
+    def get_input(self):
+        if self.match is not None:
+            return self.input, self.input_target
+        else:
+            return self.input, None
 
-        def apply_nn(self, input):
-            inputs = self.compute_scales(input)
-            outputs = []
-            for i in range(len(inputs)):
-                out = self.unet[i](inputs[i])
-                out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-3)
-                outputs.append(out)
-            x = torch.cat([o.x for o in outputs], 1)
-            out_feat = self.FC_layer(x)
-            if self.normalize_feature:
-                out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
+    def apply_nn(self, input):
+        # inputs = self.compute_scales(input)
+        outputs = []
+        for i in range(len(self.unet)):
+            out = self.unet[i](input.clone())
+            out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-3)
+            outputs.append(out)
+        x = torch.cat([o.x for o in outputs], 1)
+        out_feat = self.FC_layer(x)
+        if self.normalize_feature:
+            out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
 
-            return out_feat, outputs
+        return out_feat
