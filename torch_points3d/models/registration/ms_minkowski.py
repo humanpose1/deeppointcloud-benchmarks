@@ -97,8 +97,8 @@ class MS_Minkowski(FragmentBaseModel):
             input_target = self.input_target.clone()
             input.ind = self.match[:, 0]
             input_target.ind = self.match[:, 1]
-            input.size_match = self.size_match
-            input_target.size_match = self.size_match
+            input.size = self.size_match
+            input_target.size = self.size_match
             return input, input_target
         else:
             return self.input, None
