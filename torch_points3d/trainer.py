@@ -93,6 +93,7 @@ class Trainer:
                 )
             self._model: BaseModel = instantiate_model(copy.deepcopy(self._cfg), self._dataset)
             self._model.instantiate_optimizers(self._cfg)
+        self._checkpoint.dataset_properties = self._dataset.used_properties
 
         log.info(self._model)
         self._model.log_optimizers()
@@ -243,7 +244,7 @@ class Trainer:
                             self._tracker.track(self._model, data=data, **self.tracker_options)
                         tq_loader.set_postfix(**self._tracker.get_metrics(), color=COLORS.TEST_COLOR)
 
-                        if self._visualizer.is_active:
+                        if self.has_visualization and self._visualizer.is_active:
                             self._visualizer.save_visuals(self._model.get_current_visuals())
 
                         if self.early_break:
