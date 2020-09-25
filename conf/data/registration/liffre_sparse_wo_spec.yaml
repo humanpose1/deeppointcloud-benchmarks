@@ -12,6 +12,7 @@ data:
   max_dist_overlap: 0.4
   min_points: 2000
   num_pos_pairs: 30000
+  num_points: 5000
   tau_1: 0.5
   tau_2: 0.05
   use_ransac: False
@@ -30,9 +31,9 @@ data:
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
-        rot_x: 5
-        rot_y: 5
-        rot_z: 360
+        rot_x: 25
+        rot_y: 25
+        rot_z: 180
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
@@ -52,9 +53,9 @@ data:
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
-        rot_x: 5
-        rot_y: 5
-        rot_z: 360
+        rot_x: 25
+        rot_y: 25
+        rot_z: 180
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
@@ -71,9 +72,9 @@ data:
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
-        rot_x: 5
-        rot_y: 5
-        rot_z: 360
+        rot_x: 25
+        rot_y: 25
+        rot_z: 180
     - transform: XYZFeature
       params:
         add_x: True

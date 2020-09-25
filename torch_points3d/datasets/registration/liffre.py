@@ -215,16 +215,3 @@ class LiffreDataset(BaseSiameseDataset):
             num_pos_pairs=dataset_opt.num_pos_pairs,
             min_points=dataset_opt.min_points
         )
-
-    def get_tracker(self, wandb_log: bool, tensorboard_log: bool):
-        """
-        Factory method for the tracker
-
-        Arguments:
-            wandb_log - Log using weight and biases
-            tensorboard_log - Log using tensorboard
-        Returns:
-            [BaseTracker] -- tracker
-        """
-
-        return FragmentRegistrationTracker(self, wandb_log=wandb_log, use_tensorboard=tensorboard_log, tau_1=self.tau_1)
