@@ -13,7 +13,7 @@ from torch_points3d.models.registration.base import FragmentBaseModel
 
 
 class UnetMinkowski(nn.Module):
-    def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[67, 64, 32]):
+    def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[64, 64, 32]):
         nn.Module.__init__(self)
         self.unet = Minkowski(architecture="unet", input_nc=input_nc, config=option_unet)
         self.post_mlp = MLP(post_mlp_nn)
@@ -36,7 +36,7 @@ class UnetMinkowski(nn.Module):
 
         d, cluster = self._prepare_data(data.clone())
         d = self.unet.forward(d)
-        data.x = self.post_mlp(torch.cat([d.x[cluster], data.pos - data.pos.mean(0)], 1))
+        data.x = self.post_mlp(d.x[cluster])
         return data
 
 
