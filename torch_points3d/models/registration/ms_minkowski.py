@@ -20,6 +20,9 @@ class UnetMinkowski(nn.Module):
 
         self._grid_size = grid_size
 
+    def set_grid_size(self, grid_size):
+        self._grid_size = grid_size
+
     def _prepare_data(self, data):
         coords = torch.round((data.pos) / self._grid_size).float()
         cluster = voxel_grid(coords, data.batch, 1)
@@ -115,4 +118,19 @@ class MS_Minkowski(FragmentBaseModel):
         if self.normalize_feature:
             out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
 
-        return out_feat
+
+class MS_Minkowski_shared(FragmentBaseModel):
+    def __init__(self, option, model_type, dataset, modules):
+        FragmentBaseModel.__init__(self, option)
+        self.mode = option.loss_mode
+        self.normalize_feature = option.normalize_feature
+        self.loss_names = ["loss_reg", "loss"]
+        self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
+            getattr(option, "metric_loss", None), getattr(option, "miner", None)
+        )
+
+        option_unet = option.option_unet
+        self.grid_size = option_unet.grid_size
+        UnetMinkowski(
+            option_unet.config, post_mlp_nn=option_unet.post_mlp_nn,
+        )
