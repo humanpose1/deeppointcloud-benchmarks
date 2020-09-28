@@ -29,6 +29,7 @@ from torch_points3d.utils.registration import (
     get_matches,
 )
 from torch_points3d.metrics.registration_metrics import compute_hit_ratio, compute_transfo_error
+from torch_points3d.metrics.registration_metrics import compute_scaled_registration_error
 
 from torch_points3d.metrics.colored_tqdm import Coloredtqdm as Ctq
 from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
@@ -101,6 +102,8 @@ def compute_metrics(
     res["rot_error_fgr"] = rot_error_fgr.item()
     res["rre_fgr"] = float(rot_error_fgr.item() < rot_thresh)
     res["rte_fgr"] = float(trans_error_fgr.item() < trans_thresh)
+    sr_err_fgr = compute_scaled_registration_error(xyz, T_gt, T_fgr)
+    res["sr_err_fgr"] = sr_err_fgr.item()
 
     # teaser pp
     if use_teaser:
@@ -112,6 +115,8 @@ def compute_metrics(
         res["rot_error_teaser"] = rot_error_teaser.item()
         res["rre_teaser"] = float(rot_error_teaser.item() < rot_thresh)
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
+        sr_err_teaser = compute_scaled_registration_error(xyz, T_gt, T_teaser)
+        res["sr_err_teaser"] = sr_err_teaser.item()
 
     if use_ransac:
         raise NotImplementedError
