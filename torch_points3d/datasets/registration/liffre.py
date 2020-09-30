@@ -16,6 +16,7 @@ from torch_points3d.datasets.registration.utils import makedirs
 from torch_points3d.metrics.registration_tracker import FragmentRegistrationTracker
 from torch_points3d.datasets.registration.base_siamese_dataset import BaseSiameseDataset
 from torch_points3d.datasets.registration.base_siamese_dataset import GeneralFragment
+from torch_points3d.datasets.registration.basetest import Base3DMatchTest
 
 log = logging.getLogger(__name__)
 
@@ -175,13 +176,49 @@ class Liffre(Dataset, GeneralFragment):
         return len(self.list_fragment)
 
 
+class TestLiffre(Base3DMatchTest, GeneralFragment):
+    def __init__(self, root,
+                 transform=None,
+                 pre_transform=None,
+                 pre_filter=None,
+                 verbose=False,
+                 debug=False,
+                 num_pos_pairs=200,
+                 max_dist_overlap=0.01,
+                 min_points=500):
+        setattr(self.__class__, "process", self.process)
+        Base3DMatchTest.__init__(self, root=root,
+                                 transform=transform,
+                                 pre_transform=pre_transform,
+                                 pre_filter=pre_filter,
+                                 verbose=verbose, debug=debug,
+                                 max_dist_overlap=max_dist_overlap)
+        self.num_pos_pairs = num_pos_pairs
+        self.path_match = osp.join(self.processed_dir, "test", "matches")
+        self.list_fragment = [f for f in os.listdir(self.path_match) if "matches" in f]
+        self.self_supervised = False
+        self.is_online_matching = False
+        self.min_points = min_points
+
+    def download(self):
+        """
+        No need to Download
+        """
+        pass
+
+    def __getitem__(self, idx):
+        return self.get_fragment(idx)
+
+    def __len__(self):
+        return len(self.list_fragment)
+
+
 class LiffreDataset(BaseSiameseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         self.tau_1 = dataset_opt.tau_1
         pre_transform = self.pre_transform
         train_transform = self.train_transform
-        test_transform = self.test_transform
         pre_filter = self.pre_filter
 
         self.train_dataset = Liffre(
@@ -207,11 +244,20 @@ class LiffreDataset(BaseSiameseDataset):
             is_head=True,
             is_tail=False,
             pre_transform=pre_transform,
-            transform=test_transform,
+            transform=self.val_transform,
             pre_filter=pre_filter,
             min_size_block=dataset_opt.min_size_block,
             max_size_block=dataset_opt.max_size_block,
             max_dist_overlap=dataset_opt.max_dist_overlap,
             num_pos_pairs=dataset_opt.num_pos_pairs,
+            min_points=dataset_opt.min_points
+        )
+
+        self.test_dataset = TestLiffre(
+            root=self._data_path,
+            pre_transform=pre_transform,
+            transform=self.test_transform,
+            num_pos_pairs=50,
+            max_dist_overlap=dataset_opt.max_dist_overlap,
             min_points=dataset_opt.min_points
         )

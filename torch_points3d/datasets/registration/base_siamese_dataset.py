@@ -93,7 +93,7 @@ class GeneralFragment(object):
         if(not self.self_supervised):
             data_source = torch.load(match["path_source"]).to(torch.float)
             data_target = torch.load(match["path_target"]).to(torch.float)
-            if(hasattr(match, "pair")):
+            if "pair" in match.keys():
                 new_pair = torch.from_numpy(match["pair"])
             else:
                 len_col = 0
@@ -159,6 +159,7 @@ class GeneralFragment(object):
     def get_fragment(self, idx):
 
         data_source, data_target, new_pair = self.get_raw_pair(idx)
+
         if self.transform is not None:
             data_source = self.transform(data_source)
             data_target = self.transform(data_target)
@@ -173,6 +174,7 @@ class GeneralFragment(object):
             )
             batch.pair_ind = torch.from_numpy(new_match["pair"].copy())
         else:
+
             pair = tracked_matches(data_source, data_target, new_pair)
             batch.pair_ind = pair
 

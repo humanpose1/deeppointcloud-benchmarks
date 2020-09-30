@@ -169,8 +169,9 @@ class Base3DMatchTest(Dataset):
                 # read ply file
                 with open(fragment_path, 'rb') as f:
                     data = PlyData.read(f)
-                pos = ([torch.tensor(data['vertex'][axis]) for axis in ['x', 'y', 'z']])
-                pos = torch.stack(pos, dim=-1)
+
+                pos = ([torch.from_numpy(data['vertex'][axis].copy()) for axis in ['x', 'y', 'z']])
+                pos = torch.stack(pos, dim=-1).float()
                 data = Data(pos=pos)
                 if(self.pre_transform is not None):
                     data = self.pre_transform(data)

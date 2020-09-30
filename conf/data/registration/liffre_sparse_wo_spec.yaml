@@ -69,17 +69,6 @@ data:
 
   test_transform:
     - transform: SaveOriginalPosId
-    - transform: Random3AxisRotation
-      params:
-        apply_rotation: True
-        rot_x: 25
-        rot_y: 25
-        rot_z: 180
-    - transform: XYZFeature
-      params:
-        add_x: True
-        add_y: True
-        add_z: True
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
