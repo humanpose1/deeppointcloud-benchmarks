@@ -13,12 +13,12 @@ from torch_points3d.models.registration.base import FragmentBaseModel
 
 
 class UnetMinkowski(nn.Module):
-    def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[64, 64, 32]):
+    def __init__(self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[64, 64, 32], add_pos=False):
         nn.Module.__init__(self)
         self.unet = Minkowski(architecture="unet", input_nc=input_nc, config=option_unet)
         self.post_mlp = MLP(post_mlp_nn)
-
         self._grid_size = grid_size
+        self.add_pos = add_pos
 
     def set_grid_size(self, grid_size):
         self._grid_size = grid_size
@@ -39,7 +39,10 @@ class UnetMinkowski(nn.Module):
 
         d, cluster = self._prepare_data(data.clone())
         d = self.unet.forward(d)
-        data.x = self.post_mlp(d.x[cluster])
+        if self.add_pos:
+            data.x = self.post_mlp(torch.cat([d.x[cluster], data.pos - data.pos.mean(0)], 1))
+        else:
+            data.x = self.post_mlp(d.x[cluster])
         return data
 
 
@@ -61,6 +64,7 @@ class MS_Minkowski(FragmentBaseModel):
                 option_unet["config_{}".format(i)],
                 grid_size=option_unet.grid_size[i],
                 post_mlp_nn=option_unet.post_mlp_nn,
+                add_pos=option_unet.add_pos,
             )
             self.unet.add_module(name=str(i), module=module)
         assert option.mlp_cls is not None
