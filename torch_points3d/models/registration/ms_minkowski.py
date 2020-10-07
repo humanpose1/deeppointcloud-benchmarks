@@ -121,6 +121,7 @@ class MS_Minkowski(FragmentBaseModel):
         out_feat = self.FC_layer(x)
         if self.normalize_feature:
             out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
+        return out_feat
 
 
 class MS_Minkowski_shared(FragmentBaseModel):
