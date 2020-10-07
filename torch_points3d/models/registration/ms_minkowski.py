@@ -115,7 +115,7 @@ class MS_Minkowski(FragmentBaseModel):
         outputs = []
         for i in range(len(self.unet)):
             out = self.unet[i](input.clone())
-            out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-3)
+            out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-20)
             outputs.append(out)
         x = torch.cat([o.x for o in outputs], 1)
         out_feat = self.FC_layer(x)

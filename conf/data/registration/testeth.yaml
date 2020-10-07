@@ -1,6 +1,7 @@
 data:
   task: registration
   class: testeth.ETHDataset
+  name: ETH
   dataroot: data
   first_subsampling: 0.02
   max_dist_overlap: 0.05
