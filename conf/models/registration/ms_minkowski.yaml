@@ -114,3 +114,59 @@ models:
             num_hn_samples: 256
             pos_thresh: 0.1
             neg_thresh: 1.4
+
+
+
+  ms_minkowski_shared:
+        class: ms_minkowski.MS_Minkowski_Shared
+        conv_type: "SPARSE"
+        loss_mode: "match"
+        define_constants:
+          num_scales: 3
+          out_feat: 32
+        option_unet:
+          num_scales: num_scales
+          grid_size: [0.02, 0.05, 0.08]
+          post_mlp_nn: [32, 32]
+          config:
+            class: minkowski.Minkowski_Model
+            conv_type: "SPARSE"
+            down_conv:
+              module_name: ResNetDown
+              dimension: 3
+              bn_momentum: 0.05
+              down_conv_nn:
+                [
+                    [FEAT, 32],
+                    [32, 64],
+                    [64, 64],
+                    [64, 128]
+                ]
+              kernel_size: [5, 3, 3, 3]
+              stride: [1, 2, 2, 2]
+              dilation: [1, 1, 1, 1]
+            up_conv:
+              module_name: ResNetUp
+              dimension: 3
+              bn_momentum: 0.05
+              up_conv_nn:
+                [
+                    [128, 64],
+                    [64 + 64, 64],
+                    [64 + 64, 64],
+                    [64 + 32, 32]
+                ]
+              kernel_size: [3, 3, 3, 1]
+              stride: [2, 2, 2, 1]
+              dilation: [1, 1, 1, 1]
+        normalize_feature: True
+        mlp_cls:
+          nn: [num_scales*out_feat, out_feat, out_feat]
+          bn_momentum: 0.05
+        metric_loss:
+          class: "ContrastiveHardestNegativeLoss"
+          params:
+            num_pos: 1024
+            num_hn_samples: 256
+            pos_thresh: 0.1
+            neg_thresh: 1.4
