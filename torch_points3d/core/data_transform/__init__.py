@@ -99,14 +99,17 @@ def instantiate_filters(filter_options):
 class LotteryTransform(object):
     """
     Transforms which draw a transform randomly among several transforms indicated in transform options
-    Examples
-
+    Example:
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: GridSampling3D
+            params:
+              size: 0.1
+          - transform: Center
     Parameters
     ----------
     transform_options Omegaconf list which contains the transform
-
-
-
     """
 
     def __init__(self, transform_options):
