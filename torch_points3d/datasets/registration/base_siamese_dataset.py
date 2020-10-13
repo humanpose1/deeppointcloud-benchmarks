@@ -4,6 +4,7 @@ import random
 import torch
 from torch_geometric.data import Data
 from torch_points_kernels.points_cpu import ball_query
+from functools import partial
 
 from torch_points3d.core.data_transform import MultiScaleTransform
 from torch_points3d.core.data_transform import PairTransform
@@ -36,22 +37,21 @@ class BaseSiameseDataset(BaseDataset):
         self.is_end2end = False
 
     @staticmethod
-    def _get_collate_function(conv_type, is_multiscale):
-
+    def _get_collate_function(conv_type, is_multiscale, pre_collate_transform=None):
         is_dense = ConvolutionFormatFactory.check_is_dense_format(conv_type)
-
         if is_multiscale:
             if conv_type.lower() == ConvolutionFormat.PARTIAL_DENSE.value.lower():
-                return lambda datalist: PairMultiScaleBatch.from_data_list(datalist)
+                fn = PairMultiScaleBatch.from_data_list
             else:
                 raise NotImplementedError(
                     "MultiscaleTransform is activated and supported only for partial_dense format"
                 )
-
-        if is_dense:
-            return lambda datalist: DensePairBatch.from_data_list(datalist)
         else:
-            return lambda datalist: PairBatch.from_data_list(datalist)
+            if is_dense:
+                fn = DensePairBatch.from_data_list
+            else:
+                fn = PairBatch.from_data_list
+        return partial(BaseDataset._collate_fn, collate_fn=fn, pre_collate_transform=pre_collate_transform)
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):
         """
@@ -76,7 +76,8 @@ class BaseSiameseDataset(BaseDataset):
                     rot_thresh=self.rot_thresh,
                     trans_thresh=self.trans_thresh,
                     wandb_log=wandb_log,
-                    use_tensorboard=tensorboard_log)
+                    use_tensorboard=tensorboard_log,
+                )
 
 
 class GeneralFragment(object):
@@ -89,9 +90,8 @@ class GeneralFragment(object):
         """
         get the pair before the data augmentation
         """
-        match = np.load(osp.join(self.path_match, "matches{:06d}.npy".format(idx)),
-                        allow_pickle=True).item()
-        if(not self.self_supervised):
+        match = np.load(osp.join(self.path_match, "matches{:06d}.npy".format(idx)), allow_pickle=True).item()
+        if not self.self_supervised:
             data_source = torch.load(match["path_source"]).to(torch.float)
             data_target = torch.load(match["path_target"]).to(torch.float)
             if "pair" in match.keys():
@@ -102,14 +102,13 @@ class GeneralFragment(object):
                     new_pair = self.generate_pair(data_source, data_target)
                     len_col = len(new_pair)
         else:
-            if(random.random() < 0.5):
+            if random.random() < 0.5:
                 data_source_o = torch.load(match["path_source"]).to(torch.float)
                 data_target_o = torch.load(match["path_source"]).to(torch.float)
             else:
                 data_source_o = torch.load(match["path_target"]).to(torch.float)
                 data_target_o = torch.load(match["path_target"]).to(torch.float)
-            data_source, data_target, new_pair = self.unsupervised_preprocess(
-                data_source_o, data_target_o)
+            data_source, data_target, new_pair = self.unsupervised_preprocess(data_source_o, data_target_o)
 
         return data_source, data_target, new_pair
 
@@ -119,9 +118,9 @@ class GeneralFragment(object):
         """
         len_col = 0
 
-        while(len_col < self.min_points):
+        while len_col < self.min_points:
             # choose only one data augmentation randomly in the ss_transform (usually a crop)
-            if(self.ss_transform is not None):
+            if self.ss_transform is not None:
                 n1 = np.random.randint(0, len(self.ss_transform.transforms))
                 t1 = self.ss_transform.transforms[n1]
                 n2 = np.random.randint(0, len(self.ss_transform.transforms))
@@ -131,6 +130,7 @@ class GeneralFragment(object):
             else:
                 data_source = data_source_o
                 data_target = data_target_o
+
             new_pair = self.generate_pair(data_source, data_target)
             len_col = len(new_pair)
         return data_source, data_target, new_pair
@@ -165,7 +165,7 @@ class GeneralFragment(object):
             data_source = self.transform(data_source)
             data_target = self.transform(data_target)
 
-        if(hasattr(data_source, "multiscale")):
+        if hasattr(data_source, "multiscale"):
             batch = MultiScalePair.make_pair(data_source, data_target)
         else:
             batch = Pair.make_pair(data_source, data_target)
@@ -189,7 +189,7 @@ class GeneralFragment(object):
             rand_ind = fps_sampling(batch.pair_ind, batch.pos, num_pos_pairs)
         batch.pair_ind = batch.pair_ind[rand_ind]
         batch.size_pair_ind = torch.tensor([num_pos_pairs])
-        if(len(batch.pair_ind) == 0):
+        if len(batch.pair_ind) == 0:
             print("Warning")
         return batch.contiguous()
 
@@ -198,9 +198,7 @@ class GeneralFragment(object):
         get the name of the scene and the name of the fragments.
         """
 
-        match = np.load(osp.join(self.path_match,
-                                 "matches{:06d}.npy".format(idx)),
-                        allow_pickle=True).item()
+        match = np.load(osp.join(self.path_match, "matches{:06d}.npy".format(idx)), allow_pickle=True).item()
         source = match["name_source"]
         target = match["name_target"]
         scene = match["scene"]
