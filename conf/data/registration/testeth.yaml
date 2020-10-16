@@ -15,6 +15,8 @@ data:
   rot_thresh: 4
   trans_thresh: 0.15
   sym: True
+  use_teaser: True
+  noise_bound_teaser: 0.1
   pre_transforms:
     - transform: GridSampling3D
       params:
