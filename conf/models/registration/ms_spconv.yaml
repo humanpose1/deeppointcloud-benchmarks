@@ -1,6 +1,6 @@
 models:
   ms_sparseconv3d:
-    class: ms_spconv.MS_SparseConv3d
+    class: ms_spconv3d.MS_SparseConv3d
     conv_type: "SPARSE"
     loss_mode: "match"
     define_constants:
@@ -10,13 +10,10 @@ models:
     option_unet:
       num_scales: num_scales
       grid_size: [0.02, 0.05, 0.08]
-      post_mlp_nn: [32, 32]
-      config:
-        conv_type: "SPARSE"
+      post_mlp_nn: [64, 32]
+      backbone:
         down_conv:
           module_name: ResNetDown
-          dimension: 3
-          bn_momentum: 0.05
           down_conv_nn:
             [
               [FEAT, 32],
@@ -29,16 +26,14 @@ models:
           dilation: [1, 1, 1, 1]
         up_conv:
           module_name: ResNetUp
-          dimension: 3
-          bn_momentum: 0.05
           up_conv_nn:
             [
               [128, 64],
               [64 + 64, 64],
               [64 + 64, 64],
-              [64 + 32, 32]
+              [64 + 32, 64]
             ]
-          kernel_size: [3, 3, 3, 1]
+          kernel_size: [3, 3, 3, 3]
           stride: [2, 2, 2, 1]
           dilation: [1, 1, 1, 1]
     normalize_feature: True
@@ -67,9 +62,8 @@ models:
     option_unet:
       num_scales: num_scales
       grid_size: [0.02, 0.05, 0.08]
-      post_mlp_nn: [32, 32]
-      config:
-        conv_type: "SPARSE"
+      post_mlp_nn: [64, 32]
+      backbone:
         down_conv:
           module_name: ResNetDown
           dimension: 3
@@ -93,9 +87,9 @@ models:
               [128, 64],
               [64 + 64, 64],
               [64 + 64, 64],
-              [64 + 32, 32]
+              [64 + 32, 64]
             ]
-          kernel_size: [3, 3, 3, 1]
+          kernel_size: [3, 3, 3, 3]
           stride: [2, 2, 2, 1]
           dilation: [1, 1, 1, 1]
     normalize_feature: True
@@ -123,8 +117,8 @@ models:
     option_unet:
       num_scales: num_scales
       grid_size: [0.04, 0.1, 0.16]
-      post_mlp_nn: [32, 32]
-      config_0:
+      post_mlp_nn: [64, 32]
+      backbone:
         class: minkowski.Minkowski_Model
         conv_type: "SPARSE"
         down_conv:
@@ -150,71 +144,9 @@ models:
               [128, 64],
               [64 + 64, 64],
               [64 + 64, 64],
-              [64 + 32, 32]
+              [64 + 32, 64]
             ]
-          kernel_size: [3, 3, 3, 1]
-          stride: [2, 2, 2, 1]
-          dilation: [1, 1, 1, 1]
-      config_1:
-        class: minkowski.Minkowski_Model
-        conv_type: "SPARSE"
-        down_conv:
-          module_name: ResNetDown
-          dimension: 3
-          bn_momentum: 0.05
-          down_conv_nn:
-            [
-              [FEAT, 32],
-              [32, 64],
-              [64, 64],
-              [64, 128]
-            ]
-          kernel_size: [5, 3, 3, 3]
-          stride: [1, 2, 2, 2]
-          dilation: [1, 1, 1, 1]
-        up_conv:
-          module_name: ResNetUp
-          dimension: 3
-          bn_momentum: 0.05
-          up_conv_nn:
-            [
-              [128, 64],
-              [64 + 64, 64],
-              [64 + 64, 64],
-              [64 + 32, 32]
-            ]
-          kernel_size: [3, 3, 3, 1]
-          stride: [2, 2, 2, 1]
-          dilation: [1, 1, 1, 1]
-      config_2:
-        class: minkowski.Minkowski_Model
-        conv_type: "SPARSE"
-        down_conv:
-          module_name: ResNetDown
-          dimension: 3
-          bn_momentum: 0.05
-          down_conv_nn:
-            [
-              [FEAT, 32],
-              [32, 64],
-              [64, 64],
-              [64, 128]
-            ]
-          kernel_size: [5, 3, 3, 3]
-          stride: [1, 2, 2, 2]
-          dilation: [1, 1, 1, 1]
-        up_conv:
-          module_name: ResNetUp
-          dimension: 3
-          bn_momentum: 0.05
-          up_conv_nn:
-            [
-              [128, 64],
-              [64 + 64, 64],
-              [64 + 64, 64],
-              [64 + 32, 32]
-            ]
-          kernel_size: [3, 3, 3, 1]
+          kernel_size: [3, 3, 3, 3]
           stride: [2, 2, 2, 1]
           dilation: [1, 1, 1, 1]
     normalize_feature: True
@@ -240,13 +172,11 @@ models:
     option_unet:
       num_scales: num_scales
       grid_size: [0.02, 0.05, 0.08]
-      post_mlp_nn: [32, 32]
-      config:
-        conv_type: "SPARSE"
+      post_mlp_nn: [64, 32]
+      backbone:
         down_conv:
           module_name: ResNetDown
           dimension: 3
-          bn_momentum: 0.05
           down_conv_nn:
             [
               [FEAT, 32],
@@ -266,9 +196,9 @@ models:
               [128, 64],
               [64 + 64, 64],
               [64 + 64, 64],
-              [64 + 32, 32]
+              [64 + 32, 64]
             ]
-          kernel_size: [3, 3, 3, 1]
+          kernel_size: [3, 3, 3, 3]
           stride: [2, 2, 2, 1]
           dilation: [1, 1, 1, 1]
     normalize_feature: True

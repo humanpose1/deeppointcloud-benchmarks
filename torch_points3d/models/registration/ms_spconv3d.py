@@ -14,10 +14,10 @@ from torch_points3d.models.registration.base import FragmentBaseModel
 
 class UnetMSparseConv3d(nn.Module):
     def __init__(
-        self, option_unet, input_nc=1, grid_size=0.05, post_mlp_nn=[64, 64, 32], add_pos=False, backend="minkowski"
+        self, backbone, input_nc=1, grid_size=0.05, post_mlp_nn=[64, 64, 32], add_pos=False, backend="minkowski"
     ):
         nn.Module.__init__(self)
-        self.unet = SparseConv3d(architecture="unet", input_nc=input_nc, config=option_unet.backbone, backend=backend)
+        self.unet = SparseConv3d(architecture="unet", input_nc=input_nc, config=backbone, backend=backend)
         self.post_mlp = MLP(post_mlp_nn)
         self._grid_size = grid_size
         self.add_pos = add_pos
@@ -26,7 +26,7 @@ class UnetMSparseConv3d(nn.Module):
         self._grid_size = grid_size
 
     def _prepare_data(self, data):
-        coords = torch.round((data.pos) / self._grid_size).float()
+        coords = torch.round((data.pos) / self._grid_size).long()
         cluster = voxel_grid(coords, data.batch, 1)
         cluster, unique_pos_indices = consecutive_cluster(cluster)
 
@@ -99,7 +99,7 @@ class MS_SparseConv3d(BaseMS_SparseConv3d):
         self.unet = nn.ModuleList()
         for i in range(num_scales):
             module = UnetMSparseConv3d(
-                option_unet["config"],
+                option_unet.backbone,
                 grid_size=option_unet.grid_size[i],
                 post_mlp_nn=option_unet.post_mlp_nn,
                 add_pos=option_unet.add_pos,
@@ -140,7 +140,7 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
         BaseMS_SparseConv3d.__init__(self, option, model_type, dataset, modules)
         option_unet = option.option_unet
         self.grid_size = option_unet.grid_size
-        self.unet = UnetMSparseConv3d(option_unet.config, post_mlp_nn=option_unet.post_mlp_nn, backend=option.backend)
+        self.unet = UnetMSparseConv3d(option_unet.backbone, post_mlp_nn=option_unet.post_mlp_nn, backend=option.backend)
         assert option.mlp_cls is not None
         last_mlp_opt = option.mlp_cls
         self.FC_layer = Seq()
