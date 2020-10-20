@@ -7,7 +7,7 @@ from torch_points3d.models.base_model import BaseModel
 from torch_points3d.datasets.segmentation import IGNORE_LABEL
 from torch_points3d.applications.sparseconv3d import SparseConv3d
 from torch_points3d.models.registration.base import FragmentBaseModel
-from torch.nn import Sequential, Linear, LeakyReLU, Dropout
+from torch.nn import LeakyReLU, Linear, Sequential
 from torch_points3d.core.common_modules import FastBatchNorm1d, Seq
 
 
@@ -30,25 +30,18 @@ class APIModel(FragmentBaseModel):
 
         if option.mlp_cls is not None:
             last_mlp_opt = option.mlp_cls
-            in_feat = last_mlp_opt.nn[0]
+            last_mlp_opt.nn[0]
             self.FC_layer = Seq()
             for i in range(1, len(last_mlp_opt.nn)):
                 self.FC_layer.append(
-                    str(i),
                     Sequential(
                         *[
-                            Linear(in_feat, last_mlp_opt.nn[i], bias=False),
+                            Linear(last_mlp_opt.nn[i - 1], last_mlp_opt.nn[i], bias=False),
                             FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
                             LeakyReLU(0.2),
                         ]
-                    ),
+                    )
                 )
-                in_feat = last_mlp_opt.nn[i]
-
-            if last_mlp_opt.dropout:
-                self.FC_layer.append(Dropout(p=last_mlp_opt.dropout))
-
-            self.FC_layer.append(Linear(in_feat, in_feat, bias=False))
         else:
             self.FC_layer = torch.nn.Identity()
 
