@@ -29,14 +29,13 @@ class BaseMinkowski(FragmentBaseModel):
             self.FC_layer = Seq()
             for i in range(1, len(last_mlp_opt.nn)):
                 self.FC_layer.append(
-                    str(i),
                     Sequential(
                         *[
                             Linear(in_feat, last_mlp_opt.nn[i], bias=False),
                             FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
                             LeakyReLU(0.2),
                         ]
-                    ),
+                    )
                 )
                 in_feat = last_mlp_opt.nn[i]
 

@@ -21,6 +21,7 @@ class APIModel(FragmentBaseModel):
         self.backbone = SparseConv3d(
             "unet", dataset.feature_dimension, config=option.backbone, backend=option.get("backend", "minkowski")
         )
+        self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
         self.loss_names = ["loss_reg", "loss"]
         self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
