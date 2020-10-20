@@ -1,5 +1,5 @@
 models:
-  SparseConv3d:
+  Sparse_Unet_Fragment:
     class: sparseconv3d.APIModel
     conv_type: "SPARSE"
     backend: "torchsparse"
