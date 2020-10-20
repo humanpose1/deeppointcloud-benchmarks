@@ -3,6 +3,7 @@ models:
     class: sparseconv3d.APIModel
     conv_type: "SPARSE"
     backend: "torchsparse"
+    loss_mode: "match"
     define_constants:
       in_feat: 32
       block: ResBlock # Can be any of the blocks in modules/MinkowskiEngine/api_modules.py
