@@ -38,11 +38,12 @@ class APIModel(FragmentBaseModel):
                     Sequential(
                         *[
                             Linear(last_mlp_opt.nn[i - 1], last_mlp_opt.nn[i], bias=False),
-                            FastBatchNorm1d(last_mlp_opt.nn[i], momentum=last_mlp_opt.bn_momentum),
+                            FastBatchNorm1d(last_mlp_opt.nn[i]),
                             LeakyReLU(0.2),
                         ]
                     )
                 )
+                self.FC_layer.append(Linear(last_mlp_opt.nn[-1], last_mlp_opt.nn[-1], bias=False))
         else:
             self.FC_layer = torch.nn.Identity()
 

@@ -34,7 +34,6 @@ models:
         stride: [2, 2, 2, 1]
     mlp_cls:
       nn: [2*in_feat, in_feat]
-      bn_momentum: 0.05
     normalize_feature: True
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
