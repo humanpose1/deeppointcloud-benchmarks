@@ -7,7 +7,7 @@ models:
     define_constants:
       in_feat: 32
       out_feat: 32
-    post_mlp_nn: [2*infeat, out_feat]
+    post_mlp_nn: [2*in_feat, out_feat]
     backbone:
       down_conv:
         module_name: ResNetDown
