@@ -9,7 +9,7 @@ from torch_points3d.applications.sparseconv3d import SparseConv3d
 from torch_points3d.models.registration.base import FragmentBaseModel
 from torch.nn import LeakyReLU, Linear, Sequential
 from torch_points3d.core.common_modules import FastBatchNorm1d, Seq
-
+from torch_points3d.core.common_modules import MLP
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class APIModel(FragmentBaseModel):
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
         # Last Layer
+        self.post_mlp = MLP(option.post_mlp_nn)
 
         if option.mlp_cls is not None:
             last_mlp_opt = option.mlp_cls
@@ -77,7 +78,8 @@ class APIModel(FragmentBaseModel):
 
     def apply_nn(self, input):
         out = self.backbone.forward(input.clone())
-        out_feat = self.FC_layer(out.x)
+        x = self.post_mlp(out.x)
+        out_feat = self.FC_layer(x)
         if self.normalize_feature:
             out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
         return out_feat

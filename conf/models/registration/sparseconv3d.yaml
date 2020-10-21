@@ -6,11 +6,11 @@ models:
     loss_mode: "match"
     define_constants:
       in_feat: 32
-      block: ResBlock # Can be any of the blocks in modules/MinkowskiEngine/api_modules.py
+      out_feat: 32
+    post_mlp_nn: [2*infeat, out_feat]
     backbone:
       down_conv:
         module_name: ResNetDown
-        block: block
         down_conv_nn:
           [
             [FEAT, in_feat],
@@ -20,8 +20,8 @@ models:
           ]
         kernel_size: [5, 3, 3, 3]
         stride: [1, 2, 2, 2]
+        dilation: [1, 1, 1, 1]
       up_conv:
-        block: block
         module_name: ResNetUp
         up_conv_nn:
           [
@@ -30,10 +30,10 @@ models:
             [2*in_feat + 2*in_feat, 2*in_feat],
             [2*in_feat + in_feat, 2*in_feat],
           ]
-        kernel_size: 3
+        kernel_size: [3, 3, 3, 3]
         stride: [2, 2, 2, 1]
-    mlp_cls:
-      nn: [2*in_feat, in_feat]
+        dilation: [1, 1, 1, 1]
+
     normalize_feature: True
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
