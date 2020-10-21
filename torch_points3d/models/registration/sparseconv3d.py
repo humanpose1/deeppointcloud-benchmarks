@@ -76,7 +76,7 @@ class APIModel(FragmentBaseModel):
             return self.input, None
 
     def apply_nn(self, input):
-        out = self.backbone(input)
+        out = self.backbone.forward(input.clone())
         out_feat = self.FC_layer(out.x)
         if self.normalize_feature:
             out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
