@@ -59,7 +59,6 @@ data:
       params:
         add_to_x: True
         feat_name: 'ones'
-    - transform: Jitter
 
   val_transform:
     - transform: SaveOriginalPosId

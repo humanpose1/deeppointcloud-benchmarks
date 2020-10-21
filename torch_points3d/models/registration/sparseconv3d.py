@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class APIModel(FragmentBaseModel):
     def __init__(self, option, model_type, dataset, modules):
         # call the initialization method of UnetBasedModel
-        super().__init__(option)
+        FragmentBaseModel.__init__(self, option)
         self.backbone = SparseConv3d(
             "unet", dataset.feature_dimension, config=option.backbone, backend=option.get("backend", "minkowski")
         )
