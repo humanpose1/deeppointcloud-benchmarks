@@ -15,8 +15,8 @@ models:
           [
             [FEAT, in_feat],
             [in_feat, 2* in_feat],
-            [2* in_feat, 4 * in_feat],
-            [4 * in_feat, 8 * in_feat],
+            [2* in_feat, 2 * in_feat],
+            [2 * in_feat, 4 * in_feat],
           ]
         kernel_size: [5, 3, 3, 3]
         stride: [1, 2, 2, 2]
@@ -25,8 +25,8 @@ models:
         module_name: ResNetUp
         up_conv_nn:
           [
-            [8*in_feat, 2*in_feat],
-            [2*in_feat + 4*in_feat, 2*in_feat],
+            [4*in_feat, 2*in_feat],
+            [2*in_feat + 2*in_feat, 2*in_feat],
             [2*in_feat + 2*in_feat, 2*in_feat],
             [2*in_feat + in_feat, 2*in_feat],
           ]
