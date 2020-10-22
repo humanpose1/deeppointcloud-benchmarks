@@ -1,6 +1,5 @@
 """
-Code taken from
-https://github.com/iralabdisco/point_clouds_registration_benchmark/blob/master/eth_setup.py
+
 """
 import gdown
 import os
