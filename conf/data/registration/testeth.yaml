@@ -24,10 +24,10 @@ data:
   ss_transform:
     - transform: CubeCrop
       params:
-        c: 10
+        c: 5
     - transform: CubeCrop
       params:
-        c: 10.5
+        c: 5.5
 
   train_transform:
     - transform: SaveOriginalPosId
@@ -35,7 +35,7 @@ data:
       lparams: [20000]
     - transform: RandomNoise
       params:
-        sigma: 0.02
+        sigma: 0.01
         clip: 0.05
     - transform: LotteryTransform
       params:
@@ -45,10 +45,10 @@ data:
               size: 0.02
           - transform: GridSampling3D
             params:
-              size: 0.04
+              size: 0.03
           - transform: GridSampling3D
             params:
-              size: 0.06
+              size: 0.04
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
