@@ -79,7 +79,7 @@ class TestPairKitti(BasePCRBTest):
         os.remove(osp.join(folder, "testKitti.zip"))
 
 
-class testKITTIDataset(BaseSiameseDataset):
+class TestKITTIDataset(BaseSiameseDataset):
     """
     this class is a dataset for testing registration algorithm on KITTI dataset
     It is inspired by: https://github.com/iralabdisco/point_clouds_registration_benchmark.
