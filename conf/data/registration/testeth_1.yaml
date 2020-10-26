@@ -24,10 +24,10 @@ data:
   ss_transform:
     - transform: CubeCrop
       params:
-        c: 5
+        c: 8
     - transform: CubeCrop
       params:
-        c: 5.5
+        c: 8.5
 
   train_transform:
     - transform: SaveOriginalPosId
