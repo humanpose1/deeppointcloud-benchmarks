@@ -8,13 +8,13 @@ models:
       out_feat: 32
     backend: "torchsparse"
     option_unet:
-      pointnet_nn: [3+1, 256, 512, 1024]
+      pointnet_nn: [3+1, 256, 512, 1024, 1024]
       aggr: "max"
-      pre_mlp_nn: [1024, 32]
+      pre_mlp_nn: [1024, 512, 512, 32]
       input_nc: 1
       num_scales: num_scales
       grid_size: [0.1]
-      post_mlp_nn: [1024 + 64 + 3, 256, 32]
+      post_mlp_nn: [1024 + 64 + 3, 512, 512, 32]
       add_pre_x: True
       add_pos: True
       backbone:
