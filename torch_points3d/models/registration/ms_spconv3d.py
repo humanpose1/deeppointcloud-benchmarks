@@ -51,9 +51,9 @@ class UnetMSparseConv3d(nn.Module):
         if self.aggr is None:
             return x[unique_pos_indices]
         elif self.aggr == "mean":
-            return scatter_mean(x, cluster, dim=-1)
+            return scatter_mean(x, cluster, dim=0)
         elif self.aggr == "max":
-            res, _ = scatter_max(x, cluster, dim=-1)
+            res, _ = scatter_max(x, cluster, dim=0)
             return res
         else:
             raise NotImplementedError
