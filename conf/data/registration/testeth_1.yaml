@@ -3,12 +3,12 @@ data:
   class: testeth.ETHDataset
   name: ETH
   dataroot: data
-  first_subsampling: 0.02
+  first_subsampling: 0.06
   max_dist_overlap: 0.05
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 300
+  min_points: 600
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -42,13 +42,13 @@ data:
         transform_options:
           - transform: GridSampling3D
             params:
-              size: 0.02
-          - transform: GridSampling3D
-            params:
-              size: 0.04
+              size: 0.06
           - transform: GridSampling3D
             params:
               size: 0.08
+          - transform: GridSampling3D
+            params:
+              size: 0.1
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
@@ -76,6 +76,10 @@ data:
         feat_name: 'ones'
   test_transform:
     - transform: SaveOriginalPosId
+    - transform: FixedSphereDropout
+      params:
+        centers: [[0.0, 0.0, 0.0]]
+        radius: 1
     - transform: XYZFeature
       params:
         add_x: True

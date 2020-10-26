@@ -781,7 +781,7 @@ class RandomWalkDropout(object):
         return "{}(dropout_ratio={}, num_iter={}, radius={}, max_num={}, skip_keys={})".format(self.__class__.__name__, self.dropout_ratio, self.num_iter, self.radius, self.max_num, self.skip_keys)
 
 
-class SphereDropout(object):
+class RandomSphereDropout(object):
     """
     drop out of points on random spheres of fixed radius.
     This function takes n random balls of fixed radius r and drop
@@ -817,6 +817,41 @@ class SphereDropout(object):
     def __repr__(self):
         return "{}(num_sphere={}, radius={})".format(
             self.__class__.__name__, self.num_sphere, self.radius)
+
+class FixedSphereDropout(object):
+    """
+    drop out of points on spheres of fixed centers fixed radius.
+    This function takes n random balls of fixed radius r and drop
+    out points inside these balls.
+
+    Parameters
+    ----------
+    center: list of list of float, optional
+        centers of the spheres
+    radius: float, optional
+        radius of the spheres
+    """
+    def __init__(self,
+                 centers: List[List[float]] = [[0, 0, 0]],
+                 radius: float = 1):
+        self.centers = torch.tensor(centers)
+        self.radius = radius
+
+    def __call__(self, data):
+
+        ind, dist = ball_query(data.pos, self.centers,
+                               radius=self.radius,
+                               max_num=-1, mode=1)
+        ind = ind[dist[:, 0] > 0]
+        mask = torch.ones(len(data.pos), dtype=torch.bool)
+        mask[ind[:, 0]] = False
+        data = apply_mask(data, mask)
+
+        return data
+
+    def __repr__(self):
+        return "{}(centers={}, radius={})".format(
+            self.__class__.__name__, self.centers, self.radius)
 
 
 class SphereCrop(object):

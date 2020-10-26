@@ -76,6 +76,10 @@ data:
         feat_name: 'ones'
   test_transform:
     - transform: SaveOriginalPosId
+    - transform: FixedSphereDropout
+      params:
+        centers: [[0.0, 0.0, 0.0]]
+        radius: 1
     - transform: XYZFeature
       params:
         add_x: True
