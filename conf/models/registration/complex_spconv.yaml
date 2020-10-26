@@ -9,6 +9,7 @@ models:
     backend: "torchsparse"
     option_unet:
       pointnet_nn: [3+1, 256, 512, 1024]
+      aggr: "max"
       pre_mlp_nn: [1024, 32]
       input_nc: 1
       num_scales: num_scales
