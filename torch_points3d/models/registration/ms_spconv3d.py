@@ -41,6 +41,7 @@ class UnetMSparseConv3d(nn.Module):
         self.post_mlp = MLP(post_mlp_nn)
         self._grid_size = grid_size
         self.add_pos = add_pos
+        self.add_pre_x = add_pre_x
         self.aggr = aggr
 
     def set_grid_size(self, grid_size):
