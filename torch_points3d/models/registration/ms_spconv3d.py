@@ -28,6 +28,8 @@ class UnetMSparseConv3d(nn.Module):
         backend="minkowski",
         aggr=None,
     ):
+        if input_nc is None:
+            input_nc = 1
         nn.Module.__init__(self)
         self.unet = SparseConv3d(architecture="unet", input_nc=input_nc, config=backbone, backend=backend)
         if pre_mlp_nn is not None:
