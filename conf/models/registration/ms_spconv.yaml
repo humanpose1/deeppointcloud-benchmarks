@@ -17,7 +17,7 @@ models:
           module_name: ResNetDown
           down_conv_nn:
             [
-              [FEAT, 32],
+              [1, 32],
               [32, 64],
               [64, 64],
               [64, 128]
@@ -68,7 +68,7 @@ models:
           dimension: 3
           down_conv_nn:
             [
-              [FEAT, 32],
+              [1, 32],
               [32, 64],
               [64, 64],
               [64, 128]
@@ -120,7 +120,7 @@ models:
           dimension: 3
           down_conv_nn:
             [
-              [FEAT, 32],
+              [1, 32],
               [32, 64],
               [64, 64],
               [64, 128]
