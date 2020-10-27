@@ -72,7 +72,10 @@ class UnetMSparseConv3d(nn.Module):
 
     def forward(self, data, **kwargs):
         inp = data.clone()
-        inp.x = self.pointnet(torch.cat([inp.x, data.pos - data.pos.mean(0)], 1))
+        if self.add_pos:
+            inp.x = self.pointnet(torch.cat([inp.x, data.pos - data.pos.mean(0)], 1))
+        else:
+            inp.x = self.pointnet(inp.x)
         pre_x = inp.x
         d, cluster = self._prepare_data(inp)
         d.x = self.pre_mlp(d.x)
