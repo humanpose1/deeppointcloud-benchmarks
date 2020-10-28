@@ -8,7 +8,7 @@ data:
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 300
+  min_points: 600
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -27,7 +27,13 @@ data:
         c: 5
     - transform: CubeCrop
       params:
-        c: 5.5
+        c: 5.2
+    - transform: CubeCrop
+      params:
+        c: 10.5
+    - transform: CubeCrop
+      params:
+        c: 7
 
   train_transform:
     - transform: SaveOriginalPosId
@@ -45,10 +51,10 @@ data:
               size: 0.02
           - transform: GridSampling3D
             params:
-              size: 0.03
+              size: 0.1
           - transform: GridSampling3D
             params:
-              size: 0.04
+              size: 0.2
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
