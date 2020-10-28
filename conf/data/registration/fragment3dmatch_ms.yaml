@@ -46,7 +46,7 @@ data:
               size: 0.04
           - transform: GridSampling3D
             params:
-              size: 0.1
+              size: 0.07
     - transform: RandomNoise
       params:
         sigma: 0.005
