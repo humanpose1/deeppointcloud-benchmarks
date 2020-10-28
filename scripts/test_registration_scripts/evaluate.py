@@ -12,6 +12,10 @@ import os
 import os.path as osp
 import sys
 import pandas as pd
+import time
+
+from torch_cluster import grid_cluster
+from torch_geometric.nn.pool.consecutive import consecutive_cluster
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT = os.path.join(DIR, "..", "..")
@@ -38,6 +42,16 @@ from torch_points3d.metrics.colored_tqdm import Coloredtqdm as Ctq
 from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
 
 log = logging.getLogger(__name__)
+
+
+def voxel_selection(xyz, grid_size=0.3, min_points=5000):
+
+    coords = torch.round(xyz / grid_size)
+    cluster = grid_cluster(coords, torch.tensor([1, 1, 1]))
+    cluster, unique_pos_indices = consecutive_cluster(cluster)
+    if len(unique_pos_indices) > min_points:
+        unique_pos_indices = unique_pos_indices[:min_points]
+    return unique_pos_indices
 
 
 def compute_metrics(
@@ -126,6 +140,7 @@ def compute_metrics(
 
 
 def run(model: BaseModel, dataset: BaseDataset, device, cfg):
+    print(time.strftime("%Y%m%d-%H%M%S"))
     dataset.create_dataloaders(
         model, 1, False, cfg.training.num_workers, False,
     )
@@ -143,6 +158,9 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
                 ind, ind_target = input.ind, input_target.ind
                 matches_gt = torch.stack([ind, ind_target]).transpose(0, 1)
                 feat, feat_target = model.get_output()
+                # rand = voxel_selection(xyz, grid_size=0.06, min_points=cfg.data.min_points)
+                # rand_target = voxel_selection(xyz_target, grid_size=0.06, min_points=cfg.data.min_points)
+
                 rand = torch.randperm(len(feat))[: cfg.data.num_points]
                 rand_target = torch.randperm(len(feat_target))[: cfg.data.num_points]
                 res = dict(name_scene=name_scene, name_pair_source=name_pair_source, name_pair_target=name_pair_target)
@@ -170,7 +188,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
     output_path = os.path.join(cfg.training.checkpoint_dir, cfg.data.name, "matches")
     if not os.path.exists(output_path):
         os.makedirs(output_path, exist_ok=True)
-    df.to_csv(osp.join(output_path, "final_res.csv"))
+    df.to_csv(osp.join(output_path, "final_res_{}.csv".format(time.strftime("%Y%m%d-%H%M%S"))))
     print(df.groupby("name_scene").mean())
 
 
