@@ -160,4 +160,4 @@ def ransac_registration(xyz, xyz_target, distance_threshold=0.05, num_iterations
         open3d.registration.RANSACConvergenceCriteria(4000000, num_iterations),
     )
 
-    return torch.from_numpy(result.transformation)
+    return torch.from_numpy(result.transformation).float()
