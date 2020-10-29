@@ -149,6 +149,7 @@ def ransac_registration(xyz, xyz_target, distance_threshold=0.05, num_iterations
     pcd_t.points = open3d.utility.Vector3dVector(xyz_target.detach().cpu().numpy())
     rang = np.arange(len(xyz))
     corres = np.stack((rang, rang), axis=1)
+    corres = o3d.utility.Vector2iVector(corres)
     result = open3d.registration.registration_ransac_based_on_correspondence(
         pcd,
         pcd_t,
