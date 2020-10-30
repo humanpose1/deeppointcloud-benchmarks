@@ -190,8 +190,8 @@ def main(cfg):
 
     # Setup the dataset config
     # Generic config
-
     dataset = instantiate_dataset(cfg.data)
+
     model = checkpoint.create_model(dataset, weight_name=cfg.training.weight_name)
     log.info(model)
     log.info("Model size = %i", sum(param.numel() for param in model.parameters() if param.requires_grad))

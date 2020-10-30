@@ -1,6 +1,6 @@
 data:
   task: registration
-  class: testKitti.TestKITTIDataset
+  class: testkitti.TestKITTIDataset
   dataroot: data
   first_subsampling: 0.02
   max_dist_overlap: 0.05

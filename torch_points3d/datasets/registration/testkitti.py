@@ -26,9 +26,6 @@ from torch_points3d.datasets.registration.utils import makedirs
 log = logging.getLogger(__name__)
 
 
-
-
-
 class TestPairKitti(BasePCRBTest):
 
     def __init__(self, root,
@@ -77,6 +74,9 @@ class TestPairKitti(BasePCRBTest):
             log.info("extracting dataset")
             zip_obj.extractall(folder)
         os.remove(osp.join(folder, "testKitti.zip"))
+
+    def process(self):
+        super().process()
 
 
 class TestKITTIDataset(BaseSiameseDataset):
