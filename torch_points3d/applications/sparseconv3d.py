@@ -32,29 +32,29 @@ def SparseConv3d(
     *args,
     **kwargs
 ):
-    """ Create a Sparse Conv backbone model based on architecture proposed in
-    https://arxiv.org/abs/1904.08755
+    """Create a Sparse Conv backbone model based on architecture proposed in
+     https://arxiv.org/abs/1904.08755
 
-    Two backends are available at the moment:
-        - https://github.com/mit-han-lab/torchsparse
-        - https://github.com/NVIDIA/MinkowskiEngine
+     Two backends are available at the moment:
+         - https://github.com/mit-han-lab/torchsparse
+         - https://github.com/NVIDIA/MinkowskiEngine
 
-    Parameters
-    ----------
-    architecture : str, optional
-        Architecture of the model, choose from unet, encoder and decoder
-    input_nc : int, optional
-        Number of channels for the input
-   output_nc : int, optional
-        If specified, then we add a fully connected head at the end of the network to provide the requested dimension
-    num_layers : int, optional
-        Depth of the network
-    config : DictConfig, optional
-        Custom config, overrides the num_layers and architecture parameters
-    block:
-        Type of resnet block, ResBlock by default but can be any of the blocks in modules/SparseConv3d/modules.py
-    backend:
-        torchsparse or minkowski
+     Parameters
+     ----------
+     architecture : str, optional
+         Architecture of the model, choose from unet, encoder and decoder
+     input_nc : int, optional
+         Number of channels for the input
+    output_nc : int, optional
+         If specified, then we add a fully connected head at the end of the network to provide the requested dimension
+     num_layers : int, optional
+         Depth of the network
+     config : DictConfig, optional
+         Custom config, overrides the num_layers and architecture parameters
+     block:
+         Type of resnet block, ResBlock by default but can be any of the blocks in modules/SparseConv3d/modules.py
+     backend:
+         torchsparse or minkowski
     """
     sp3d.nn.set_backend(backend)
     factory = SparseConv3dFactory(
@@ -78,7 +78,10 @@ class SparseConv3dFactory(ModelFactory):
         if self._config:
             model_config = self._config
         else:
-            path_to_model = os.path.join(PATH_TO_CONFIG, "encoder_{}.yaml".format(self.num_layers),)
+            path_to_model = os.path.join(
+                PATH_TO_CONFIG,
+                "encoder_{}.yaml".format(self.num_layers),
+            )
             model_config = OmegaConf.load(path_to_model)
         ModelFactory.resolve_model(model_config, self.num_features, self._kwargs)
         modules_lib = sys.modules[__name__]
@@ -129,10 +132,9 @@ class BaseSparseConv3d(UnwrappedUnetBasedModel):
         """
         self.input = sp3d.nn.SparseTensor(data.x, data.coords, data.batch, self.device)
         if data.pos is not None:
-            self.xyz = data.pos.to(self.device)
+            self.xyz = data.pos
         else:
-            self.xyz = data.coords.to(self.device)
-
+            self.xyz = data.coords
 
 class SparseConv3dEncoder(BaseSparseConv3d):
     def forward(self, data, *args, **kwargs):
@@ -198,7 +200,7 @@ class SparseConv3dUnet(BaseSparseConv3d):
         for i in range(len(self.up_modules)):
             data = self.up_modules[i](data, stack_down.pop())
 
-        out = Batch(x=data.F, pos=self.xyz)
+        out = Batch(x=data.F, pos=self.xyz).to(self.device)
         if self.has_mlp_head:
             out.x = self.mlp(out.x)
         return out
