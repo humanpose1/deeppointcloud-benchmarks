@@ -713,6 +713,8 @@ class RandomDropout:
 def apply_mask(data, mask, skip_keys=[]):
     size_pos = len(data.pos)
     for k in data.keys:
+        if(not torch.is_tensor(data[k])):
+            continue
         if(size_pos == len(data[k]) and k not in skip_keys):
             data[k] = data[k][mask]
     return data
