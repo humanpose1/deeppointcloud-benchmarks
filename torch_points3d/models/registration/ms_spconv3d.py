@@ -213,6 +213,30 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
                 )
             )
 
+        # Intermediate loss
+        if option.intermediate_loss is not None:
+            int_loss_option = option.intermediate_loss
+            self.int_metric_loss, _ = FragmentBaseModel.get_metric_loss_and_miner(
+                getattr(int_loss_option, "metric_loss", None), getattr(int_loss_option, "miner", None)
+            )
+            self.int_weights = int_loss_option.weights
+            for i in range(int_loss_option.weights):
+                self.loss_names += ["intermediate_loss_{}".format(i)]
+        else:
+            self.int_metric_loss = None
+
+    def compute_intermediate_loss(self, outputs, outputs_target):
+        assert len(outputs) == len(outputs_target)
+        if self.int_metric_loss is not None:
+            assert len(outputs) == self.int_weights
+            for i, w in enumerate(self.int_weights):
+                xyz = self.input.pos
+                xyz_target = self.input_target.pos
+                self["intermediate_loss_{}".format(i)] = self.int_metric_loss(
+                    outputs[i], outputs_target[i], self.match[:, :2], xyz, xyz_target
+                )
+                self.loss += w * self["intermediate_loss_{}".format(i)]
+
     def apply_nn(self, input):
         # inputs = self.compute_scales(input)
         outputs = []
@@ -225,4 +249,16 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
         out_feat = self.FC_layer(x)
         if self.normalize_feature:
             out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
-        return out_feat
+        return out_feat, outputs
+
+    def forward(self, *args, **kwargs):
+        self.output, outputs = self.apply_nn(self.input)
+        if self.match is None:
+            return self.output
+
+        self.output_target, outputs_target = self.apply_nn(self.input_target)
+        self.compute_loss()
+
+        self.compute_intermediate_loss(self, outputs, outputs_target)
+
+        return self.output
