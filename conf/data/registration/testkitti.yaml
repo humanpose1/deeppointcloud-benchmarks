@@ -1,5 +1,6 @@
 data:
   task: registration
+  name: TestKitti
   class: testkitti.TestKITTIDataset
   dataroot: data
   first_subsampling: 0.02
