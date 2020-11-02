@@ -220,7 +220,7 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
                 getattr(int_loss_option, "metric_loss", None), getattr(int_loss_option, "miner", None)
             )
             self.int_weights = int_loss_option.weights
-            for i in range(int_loss_option.weights):
+            for i in range(len(int_loss_option.weights)):
                 self.loss_names += ["intermediate_loss_{}".format(i)]
         else:
             self.int_metric_loss = None
