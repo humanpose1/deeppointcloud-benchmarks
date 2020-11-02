@@ -228,7 +228,7 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
     def compute_intermediate_loss(self, outputs, outputs_target):
         assert len(outputs) == len(outputs_target)
         if self.int_metric_loss is not None:
-            assert len(outputs) == self.int_weights
+            assert len(outputs) == len(self.int_weights)
             for i, w in enumerate(self.int_weights):
                 xyz = self.input.pos
                 xyz_target = self.input_target.pos
