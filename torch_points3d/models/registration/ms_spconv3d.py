@@ -259,6 +259,6 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
         self.output_target, outputs_target = self.apply_nn(self.input_target)
         self.compute_loss()
 
-        self.compute_intermediate_loss(self, outputs, outputs_target)
+        self.compute_intermediate_loss(outputs, outputs_target)
 
         return self.output
