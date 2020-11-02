@@ -55,7 +55,7 @@ models:
         neg_thresh: 1.4
 
 
-  ms_sparseconv3d_shared_pretrained_with int_loss:
+  ms_sparseconv3d_shared_pretrained_with_int_loss:
     class: ms_spconv3d.MS_SparseConv3d_Shared
     path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-23/14-41-58/sparseconv3d_simple.pt"
     weight_name: "latest"
