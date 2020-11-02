@@ -221,7 +221,7 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
             )
             self.int_weights = int_loss_option.weights
             for i in range(len(int_loss_option.weights)):
-                self.loss_names += ["intermediate_loss_{}".format(i)]
+                self.loss_names += ["loss_intermediate_loss_{}".format(i)]
         else:
             self.int_metric_loss = None
 
@@ -232,10 +232,9 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
             for i, w in enumerate(self.int_weights):
                 xyz = self.input.pos
                 xyz_target = self.input_target.pos
-                self["intermediate_loss_{}".format(i)] = self.int_metric_loss(
-                    outputs[i], outputs_target[i], self.match[:, :2], xyz, xyz_target
-                )
-                self.loss += w * self["intermediate_loss_{}".format(i)]
+                loss_i = self.int_metric_loss(outputs[i].x, outputs_target[i].x, self.match[:, :2], xyz, xyz_target)
+                self.loss += w * loss_i
+                setattr(self, "loss_intermediate_loss_{}".format(i), loss_i)
 
     def apply_nn(self, input):
         # inputs = self.compute_scales(input)
