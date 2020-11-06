@@ -248,7 +248,7 @@ models:
           dilation: [1, 1, 1, 1]
     normalize_feature: True
     mlp_cls:
-      nn: [num_scales*out_feat, out_feat]
+      nn: [num_scales*out_feat, out_feat, out_feat]
       bn_momentum: 0.05
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"
