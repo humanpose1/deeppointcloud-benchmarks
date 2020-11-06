@@ -205,7 +205,7 @@ models:
         num_hn_samples: 256
         pos_thresh: 0.1
         neg_thresh: 1.4
-  sparseconv3d_large:
+  ms_sparseconv3d_large:
     class: ms_spconv3d.MS_SparseConv3d_Shared
     conv_type: "SPARSE"
     loss_mode: "match"
