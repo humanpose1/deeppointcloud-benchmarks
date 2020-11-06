@@ -1,7 +1,7 @@
 models:
-  ms_sparseconv3d_shared_pretrained:
+  ms_sparseconv3d_shared_pretrained_3_network:
     class: ms_spconv3d.MS_SparseConv3d_Shared
-    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-23/14-41-58/sparseconv3d_simple.pt"
+    path_pretrained: "/media/admincaor/DataHDD2To/mines/code/deeppointcloud-benchmarks/outputs/supervised/ms_spconv_shared/ms_sparseconv3d_shared.pt"
     weight_name: "latest"
     conv_type: "SPARSE"
     loss_mode: "match"
@@ -12,7 +12,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.02, 0.05, 0.1]
+      grid_size: [0.04, 0.05, 0.1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -54,30 +54,20 @@ models:
         pos_thresh: 0.1
         neg_thresh: 1.4
 
-
-  ms_sparseconv3d_shared_pretrained_with_int_loss:
+  ms_sparseconv3d_shared_pretrained_5_network:
     class: ms_spconv3d.MS_SparseConv3d_Shared
-    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-23/14-41-58/sparseconv3d_simple.pt"
+    path_pretrained: "/media/admincaor/DataHDD2To/mines/code/deeppointcloud-benchmarks/outputs/supervised/ms_spconv_shared/ms_sparseconv3d_shared.pt"
     weight_name: "latest"
     conv_type: "SPARSE"
     loss_mode: "match"
     define_constants:
-      num_scales: 3
+      num_scales: 5
       out_feat: 32
     backend: "torchsparse"
-    intermediate_loss:
-      metric_loss:
-        class: "ContrastiveHardestNegativeLoss"
-        params:
-          num_pos: 128
-          num_hn_samples: 64
-          pos_thresh: 0.1
-          neg_thresh: 1.4
-      weights: [0.1, 0.1, 0.1]
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.02, 0.05, 0.1]
+      grid_size: [0.04, 0.05, 0.1, 0.15, 0.2]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -119,30 +109,20 @@ models:
         pos_thresh: 0.1
         neg_thresh: 1.4
 
-
-  ms_sparseconv3d_shared_pretrained_with_int_loss_large:
+  ms_sparseconv3d_shared_pretrained_5_network_1:
     class: ms_spconv3d.MS_SparseConv3d_Shared
-    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-29/15-28-48/sparseconv3d_simple_large.pt"
+    path_pretrained: "/media/admincaor/DataHDD2To/mines/code/deeppointcloud-benchmarks/outputs/supervised/ms_spconv_shared/ms_sparseconv3d_shared.pt"
     weight_name: "latest"
     conv_type: "SPARSE"
     loss_mode: "match"
     define_constants:
-      num_scales: 3
+      num_scales: 5
       out_feat: 32
     backend: "torchsparse"
-    intermediate_loss:
-      metric_loss:
-        class: "ContrastiveHardestNegativeLoss"
-        params:
-          num_pos: 128
-          num_hn_samples: 64
-          pos_thresh: 0.1
-          neg_thresh: 1.4
-      weights: [0.1, 0.1, 0.1]
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.02, 0.05, 0.1]
+      grid_size: [0.04, 0.05, 0.1, 0.15, 0.2]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -174,7 +154,7 @@ models:
           dilation: [1, 1, 1, 1]
     normalize_feature: True
     mlp_cls:
-      nn: [num_scales*out_feat, out_feat, out_feat]
+      nn: [num_scales*out_feat, out_feat*2, out_feat]
       bn_momentum: 0.05
     metric_loss:
       class: "ContrastiveHardestNegativeLoss"

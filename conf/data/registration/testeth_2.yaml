@@ -3,12 +3,12 @@ data:
   class: testeth.ETHDataset
   name: ETH
   dataroot: data
-  first_subsampling: 0.04
+  first_subsampling: 0.02
   max_dist_overlap: 0.05
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 1000
+  min_points: 5000
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -27,7 +27,7 @@ data:
         c: 5
     - transform: CubeCrop
       params:
-        c: 5.2
+        c: 7.2
     - transform: CubeCrop
       params:
         c: 10.5
@@ -38,7 +38,7 @@ data:
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
-      lparams: [15000]
+      lparams: [20000]
     - transform: RandomNoise
       params:
         sigma: 0.01
@@ -48,13 +48,13 @@ data:
         transform_options:
           - transform: GridSampling3D
             params:
-              size: 0.04
-          - transform: GridSampling3D
-            params:
-              size: 0.06
+              size: 0.02
           - transform: GridSampling3D
             params:
               size: 0.1
+          - transform: GridSampling3D
+            params:
+              size: 0.2
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
