@@ -1,6 +1,7 @@
 import json
 import logging
 import numpy as np
+import pandas as pd
 import os
 import os.path as osp
 from plyfile import PlyData
@@ -14,6 +15,7 @@ import random
 from torch_geometric.data import Dataset, download_url, extract_zip
 from torch_geometric.data import Data
 
+from torch_points3d.core.data_transform import FixedSphereDropout
 from torch_points3d.datasets.registration.base_siamese_dataset import GeneralFragment
 
 from torch_points3d.datasets.registration.utils import rgbd2fragment_rough
@@ -249,7 +251,8 @@ class BasePCRBTest(Dataset, GeneralFragment):
                  min_size_block=2,
                  max_size_block=3,
                  ss_transform=None,
-                 use_fps=False):
+                 use_fps=False,
+                 radius_exclude=2):
         """
         a baseDataset that download a dataset,
         apply preprocessing, and compute keypoints
@@ -265,6 +268,7 @@ class BasePCRBTest(Dataset, GeneralFragment):
         max_size_block: float
             for self supervised, maximum size of the ball where points inside it will be matched
         """
+        self.radius_exclude = radius_exclude
         self.max_dist_overlap = max_dist_overlap
         self.num_pos_pairs = num_pos_pairs
         self.is_online_matching = False
@@ -281,6 +285,7 @@ class BasePCRBTest(Dataset, GeneralFragment):
         self.min_size_block = min_size_block
         self.max_size_block = max_size_block
         self.use_fps = use_fps
+
 
     def download(self):
         raise NotImplementedError("need to implement the download procedure")
@@ -341,6 +346,9 @@ class BasePCRBTest(Dataset, GeneralFragment):
             fragment_dir = osp.join(self.raw_dir,
                                     "test",
                                     scene_path)
+            pose_path = osp.join(self.raw_dir,
+                                 "test",
+                                 "pose_{}.csv".format(scene_path))
 
             if(osp.isfile(fragment_dir)):
                 continue
@@ -356,6 +364,13 @@ class BasePCRBTest(Dataset, GeneralFragment):
                                     'fragment_{:06d}.pt'.format(find_int(f_p)))
                 pos = torch.from_numpy(BasePCRBTest.read_pcd(fragment_path)[0])
                 data = Data(pos=pos)
+                if(osp.exists(pose_path)):
+                    # exclude the sensor
+                    ind = find_int(f_p)
+                    df = pd.read_csv(pose_path)
+                    centers = [[df[' T03'][ind], df[' T13'][ind], df[' T23'][ind]]]
+                    exclude_trans = FixedSphereDropout(centers, radius=self.radius_exclude)
+                    data = exclude_trans(data)
                 if(self.pre_transform is not None):
                     data = self.pre_transform(data)
                 torch.save(data, out_path)

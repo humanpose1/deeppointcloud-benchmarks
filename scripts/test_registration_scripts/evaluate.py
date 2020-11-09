@@ -14,8 +14,6 @@ import sys
 import pandas as pd
 import time
 
-from torch_cluster import grid_cluster
-from torch_geometric.nn.pool.consecutive import consecutive_cluster
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT = os.path.join(DIR, "..", "..")
@@ -42,16 +40,6 @@ from torch_points3d.metrics.colored_tqdm import Coloredtqdm as Ctq
 from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
 
 log = logging.getLogger(__name__)
-
-
-def voxel_selection(xyz, grid_size=0.3, min_points=5000):
-
-    coords = torch.round(xyz / grid_size)
-    cluster = grid_cluster(coords, torch.tensor([1, 1, 1]))
-    cluster, unique_pos_indices = consecutive_cluster(cluster)
-    if len(unique_pos_indices) > min_points:
-        unique_pos_indices = unique_pos_indices[:min_points]
-    return unique_pos_indices
 
 
 def compute_metrics(

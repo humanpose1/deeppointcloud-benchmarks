@@ -8,7 +8,7 @@ data:
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 1000
+  min_points: 5000
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -18,10 +18,6 @@ data:
   use_teaser: True
   noise_bound_teaser: 0.1
   pre_transforms:
-    - transform: FixedSphereDropout
-      params:
-        centers: [[0.0, 0.0, 0.0]]
-        radius: 2
     - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
@@ -31,10 +27,7 @@ data:
         c: 5
     - transform: CubeCrop
       params:
-        c: 5.2
-    - transform: CubeCrop
-      params:
-        c: 10.5
+        c: 3.5
     - transform: CubeCrop
       params:
         c: 5.5
@@ -42,11 +35,26 @@ data:
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
-      lparams: [15000]
+      lparams: [20000]
     - transform: RandomNoise
       params:
         sigma: 0.01
         clip: 0.05
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 10
+              radius: 0.2
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 1
+              radius: 0.1
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 3
+              radius: 1
     - transform: LotteryTransform
       params:
         transform_options:
