@@ -63,7 +63,7 @@ data:
               size: 0.06
           - transform: GridSampling3D
             params:
-              size: 0.06
+              size: 0.08
           - transform: GridSampling3D
             params:
               size: 0.1
