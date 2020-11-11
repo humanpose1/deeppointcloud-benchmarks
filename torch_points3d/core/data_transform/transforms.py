@@ -906,17 +906,20 @@ class CubeCrop(object):
     """
 
     def __init__(self, c: float = 1,
+                 grid_size_center: float = 0.1,
                  rot_x: float = 180,
                  rot_y: float = 180,
                  rot_z: float = 180):
         self.c = c
         self.random_rotation = Random3AxisRotation(
             rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
+        self.grid_sampling = GridSampling3D(grid_size_center)
 
     def __call__(self, data):
+        data_c = self.grid_sampling(data.clone())
         data_temp = data.clone()
-        i = torch.randint(0, len(data.pos), (1, ))
-        center = data_temp.pos[i]
+        i = torch.randint(0, len(data_c.pos), (1, ))
+        center = data_c.pos[i]
         min_square = center - self.c
         max_square = center + self.c
         data_temp.pos = data_temp.pos - center
@@ -969,4 +972,41 @@ class DensityFilter(object):
         return "{}(radius_nn={}, min_num={}, skip_keys={})".format(self.__class__.__name__,
                                                                    self.radius_nn,
                                                                    self.min_num,
+                                                                   self.skip_keys)
+
+
+class IrregularSampling(object):
+
+    def __init__(self,
+                 d_half=2.5,
+                 p=2,
+                 grid_size_center=0.1,
+                 skip_keys=[]):
+        """
+        a sort of soft crop. the more we are far from the center, the more it is unlikely to choose the point
+        """
+        self.d_half = d_half
+        self.p = p
+        self.skip_keys = skip_keys
+        self.grid_sampling = GridSampling3D(grid_size_center, mode="last")
+
+    def __call__(self, data):
+
+        data_temp = self.grid_sampling(data.clone())
+        i = torch.randint(0, len(data_temp.pos), (1, ))
+        center = data_temp.pos[i]
+
+        d_p = (torch.abs(data.pos - center)**self.p).sum(1)
+
+        sigma_2 = (self.d_half**self.p) / (2 * np.log(2))
+        thresh = torch.exp(-d_p / (2 * sigma_2))
+
+        mask = torch.rand(len(data.pos)) < thresh
+        data = apply_mask(data, mask, self.skip_keys)
+        return data
+
+    def __repr__(self):
+        return "{}(d_half={}, p={}, skip_keys={})".format(self.__class__.__name__,
+                                                                   self.d_half,
+                                                                   self.p,
                                                                    self.skip_keys)
