@@ -123,6 +123,9 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
     ind = 0
     if cfg.ind is not None:
         ind = cfg.ind
+    t = 5
+    if cfg.t is not None:
+        t = cfg.t
     print(loader)
     print(ind)
     data = loader[ind]
@@ -164,7 +167,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
         kp_s = torch2o3d(input, ind=rand[matches_pred[:, 0]][rand_ind])
         kp_s.transform(T_gt.cpu().numpy())
         kp_t = torch2o3d(input_target, ind=rand_target[matches_pred[:, 1]][rand_ind])
-        match_visualizer(pcd_source, kp_s, pcd_target, kp_t, inliers[rand_ind].cpu().numpy(), radius=0.1, t=2)
+        match_visualizer(pcd_source, kp_s, pcd_target, kp_t, inliers[rand_ind].cpu().numpy(), radius=0.1, t=t)
 
 
 @hydra.main(config_path="../../conf/config.yaml", strict=False)
