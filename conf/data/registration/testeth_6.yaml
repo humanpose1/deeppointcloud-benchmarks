@@ -8,7 +8,7 @@ data:
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 700
+  min_points: 800
   num_points: 5000
   tau_1: 0.1
   tau_2: 0.05
@@ -25,34 +25,34 @@ data:
     - transform: IrregularSampling
       params:
         d_half: 3.5
-        grid_size_center: 0.5
+        grid_size_center: 0.2
     - transform: IrregularSampling
       params:
-        d_half: 2.5
-        grid_size_center: 0.5
+        d_half: 4.5
+        grid_size_center: 0.2
 
 
   train_transform:
     - transform: SaveOriginalPosId
-    - transform: FixedPoints
-      lparams: [20000]
     - transform: RandomNoise
       params:
         sigma: 0.01
         clip: 0.05
-
     - transform: LotteryTransform
       params:
         transform_options:
-          - transform: GridSampling3D
+          - transform: RandomSphereDropout
             params:
-              size: 0.06
-          - transform: GridSampling3D
+              num_sphere: 10
+              radius: 1
+          - transform: RandomSphereDropout
             params:
-              size: 0.06
-          - transform: GridSampling3D
+              num_sphere: 1
+              radius: 0.1
+          - transform: RandomSphereDropout
             params:
-              size: 0.1
+              num_sphere: 3
+              radius: 1
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
