@@ -976,15 +976,15 @@ class DensityFilter(object):
 
 
 class IrregularSampling(object):
-
+    """
+    a sort of soft crop. the more we are far from the center, the more it is unlikely to choose the point
+    """
     def __init__(self,
                  d_half=2.5,
                  p=2,
                  grid_size_center=0.1,
                  skip_keys=[]):
-        """
-        a sort of soft crop. the more we are far from the center, the more it is unlikely to choose the point
-        """
+
         self.d_half = d_half
         self.p = p
         self.skip_keys = skip_keys
@@ -1010,3 +1010,36 @@ class IrregularSampling(object):
                                                                    self.d_half,
                                                                    self.p,
                                                                    self.skip_keys)
+
+
+class PeriodicSampling(object):
+    """
+    sample point at a periodic distance
+    """
+
+    def __init__(self, period=0.1, prop=0.1, box_multiplier=1, skip_keys=[]):
+
+        self.pulse = 2 * np.pi / period
+        self.thresh = np.cos(self.pulse * prop * period * 0.5)
+        self.box_multiplier = box_multiplier
+        self.skip_keys = skip_keys
+
+    def __call__(self, data):
+
+        data_temp = data.clone()
+        max_p = data_temp.pos.max(0)[0]
+        min_p = data_temp.pos.min(0)[0]
+
+        center = self.box_multiplier * torch.rand(3) * (max_p - min_p) + min_p
+        d_p = torch.norm(data.pos - center, dim=1)
+        mask = torch.cos(self.pulse * d_p) > self.thresh
+        data = apply_mask(data, mask, self.skip_keys)
+        return data
+
+    def __repr__(self):
+        return "{}(pulse={}, thresh={}, box_mullti={}, skip_keys={})".format(
+            self.__class__.__name__,
+            self.pulse,
+            self.thresh,
+            self.box_multiplier,
+            self.skip_keys)
