@@ -25,15 +25,15 @@ data:
     - transform: CubeCrop
       params:
         c: 5
-        grid_size_center: 0.2
+        grid_size_center: 0.02
     - transform: CubeCrop
       params:
         c: 5
-        grid_size_center: 0.2
+        grid_size_center: 0.02
     - transform: CubeCrop
       params:
         c: 5.5
-        grid_size_center: 0.2
+        grid_size_center: 0.02
 
   train_transform:
     - transform: SaveOriginalPosId
@@ -55,6 +55,12 @@ data:
             params:
               period: 0.2
               prop: 0.2
+              box_multiplier: 10
+          - transform: PeriodicSampling
+            params:
+              period: 0.15
+              prop: 0.2
+              box_multiplier: 10
           - transform: PeriodicSampling
             params:
               period: 0.1
@@ -62,7 +68,7 @@ data:
               box_multiplier: 10
           - transform: PeriodicSampling
             params:
-              size: 0.1
+              period: 0.1
               prop: 1
           - transform: GridSampling3D
             params:
