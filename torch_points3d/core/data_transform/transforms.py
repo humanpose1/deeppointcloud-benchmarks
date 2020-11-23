@@ -834,15 +834,23 @@ class FixedSphereDropout(object):
     """
     def __init__(self,
                  centers: List[List[float]] = [[0, 0, 0]],
+                 name_ind=None,
                  radius: float = 1):
         self.centers = torch.tensor(centers)
         self.radius = radius
+        self.name_ind = name_ind
 
     def __call__(self, data):
 
-        ind, dist = ball_query(data.pos, self.centers,
-                               radius=self.radius,
-                               max_num=-1, mode=1)
+        if self.name_ind is None:
+            ind, dist = ball_query(data.pos, self.centers,
+                                   radius=self.radius,
+                                   max_num=-1, mode=1)
+        else:
+            center = data.pos[data[self.name_ind].long()]
+            ind, dist = ball_query(data.pos, center,
+                                   radius=self.radius,
+                                   max_num=-1, mode=1)
         ind = ind[dist[:, 0] > 0]
         mask = torch.ones(len(data.pos), dtype=torch.bool)
         mask[ind[:, 0]] = False

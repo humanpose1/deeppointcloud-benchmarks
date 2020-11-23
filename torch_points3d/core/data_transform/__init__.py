@@ -127,6 +127,24 @@ class LotteryTransform(object):
         return rep
 
 
+class ComposeTransform(object):
+    """
+    simple transform which compose the transforms
+    """
+    def __init__(self, transform_options):
+        self.transform = instantiate_transforms(transform_options)
+
+    def __call__(self, data):
+        return self.transform(data)
+
+    def __repr__(self):
+        rep = "ComposeTransform(["
+        for trans in self.transform.transforms:
+            rep = rep + "{}, ".format(trans.__repr__())
+        rep = rep + "])"
+        return rep
+
+
 class RandomParamTransform(object):
     """
     create a transform with random parameters

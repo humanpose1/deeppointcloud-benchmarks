@@ -20,24 +20,64 @@ data:
   pre_transforms:
     - transform: GridSampling3D
       params:
-        size: ${data.first_subsampling}
+        size: 0.02
   ss_transform:
-    - transform: CubeCrop
+    - transform: ComposeTransform
       params:
-        c: 5
-        grid_size_center: 0.02
-    - transform: IrregularSampling
+        transform_options:
+          - transform: RandomParamTransform
+            params:
+              transform_name: FixedSphereDropout
+              transform_params:
+                radius:
+                  min: 0.7
+                  max: 3
+                  type: "float"
+                name_ind:
+                  value: "ind_sensors"
+
+          - transform: CubeCrop
+            params:
+              c: 5
+              grid_size_center: 0.02
+    - transform: ComposeTransform
       params:
-        d_half: 3.5
-        p: 1
-        grid_size_center: 0.01
+        transform_options:
+          - transform: RandomParamTransform
+            params:
+              transform_name: FixedSphereDropout
+              transform_params:
+                radius:
+                  min: 0.7
+                  max: 3
+                  type: "float"
+                name_ind:
+                  value: "ind_sensors"
 
-    - transform: CubeCrop
+          - transform: IrregularSampling
+            params:
+              d_half: 3.5
+              p: 1
+              grid_size_center: 0.01
+
+    - transform: ComposeTransform
       params:
-        c: 5.5
-        grid_size_center: 0.02
+        transform_options:
+          - transform: RandomParamTransform
+            params:
+              transform_name: FixedSphereDropout
+              transform_params:
+                radius:
+                  min: 0.7
+                  max: 3
+                  type: "float"
+                name_ind:
+                  value: "ind_sensors"
 
-
+          - transform: CubeCrop
+            params:
+              c: 5.5
+              grid_size_center: 0.02
   train_transform:
     - transform: SaveOriginalPosId
     - transform: RandomNoise
@@ -57,7 +97,7 @@ data:
                   type: "float"
                 num_sphere:
                   min: 1
-                  max: 5
+                  max: 6
                   type: "int"
           - transform: RandomParamTransform
             params:
@@ -69,7 +109,7 @@ data:
                   type: "float"
                 num_sphere:
                   min: 1
-                  max: 7
+                  max: 10
                   type: "int"
           - transform: RandomSphereDropout
             params:
@@ -84,7 +124,7 @@ data:
               transform_params:
                 period:
                   min: 0.09
-                  max: 2
+                  max: 0.2
                   type: "float"
                 prop:
                   min: 0.1
@@ -96,7 +136,7 @@ data:
               transform_params:
                 period:
                   min: 0.09
-                  max: 2
+                  max: 0.2
                   type: "float"
                 prop:
                   min: 0.1

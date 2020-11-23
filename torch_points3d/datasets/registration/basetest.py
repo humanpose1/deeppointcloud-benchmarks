@@ -30,6 +30,7 @@ from torch_points3d.datasets.registration.utils import PatchExtractor
 from torch_points3d.datasets.registration.pair import Pair, MultiScalePair
 from torch_points3d.datasets.registration.utils import tracked_matches
 
+from torch_points_kernels.points_cpu import dense_knn
 
 log = logging.getLogger(__name__)
 
@@ -364,15 +365,18 @@ class BasePCRBTest(Dataset, GeneralFragment):
                                     'fragment_{:06d}.pt'.format(find_int(f_p)))
                 pos = torch.from_numpy(BasePCRBTest.read_pcd(fragment_path)[0])
                 data = Data(pos=pos)
+                if(self.pre_transform is not None):
+                    data = self.pre_transform(data)
                 if(osp.exists(pose_path)):
                     # exclude the sensor
                     ind = find_int(f_p)
                     df = pd.read_csv(pose_path)
-                    centers = [[df[' T03'][ind], df[' T13'][ind], df[' T23'][ind]]]
-                    exclude_trans = FixedSphereDropout(centers, radius=self.radius_exclude)
-                    data = exclude_trans(data)
-                if(self.pre_transform is not None):
-                    data = self.pre_transform(data)
+                    center = torch.tensor(
+                        [[df[' T03'][ind], df[' T13'][ind], df[' T23'][ind]]]).float().unsqueeze(0)
+
+                    ind_sensors, _ = dense_knn(data.pos.unsqueeze(0).float(), center, k=1)
+                    data.ind_sensors = ind_sensors[0][0]
+
                 torch.save(data, out_path)
 
     def _compute_matches_between_fragments(self):
