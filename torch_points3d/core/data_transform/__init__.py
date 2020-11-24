@@ -148,11 +148,48 @@ class ComposeTransform(object):
 class RandomParamTransform(object):
     """
     create a transform with random parameters
+
+    Example (on the yaml)
+
+    .. code-block:: yaml
+
+        transform: RandomParamTransform
+            params:
+                transform_name: GridSampling3D
+                transform_params:
+                    size:
+                        min: 0.1
+                        max: 0.3
+                        type: "float"
+                    mode:
+                        value: "last"
+
+
+    We can also draw random numbers for two parameters, integer or float
+
+    .. code-block:: yaml
+
+        transform: RandomParamTransform
+            params:
+                transform_name: RandomSphereDropout
+                transform_params:
+                    radius:
+                        min: 1
+                        max: 2
+                        type: "float"
+                    num_sphere:
+                        min: 1
+                        max: 5
+                        type: "int"
+
+
     Parameters
     ----------
+    transform_name: string:
+        the name of the transform
+    transform_options: Omegaconf Dict
+        contains the name of a variables as a key and min max type as value to specify the range of the parameters and the type of the parameters or it contains the value "value" to specify a variables (see Example above)
 
-    transform_options Omegaconf list which contains the transform
-    we need to specify three component for the param (the min, the max and the type)
     """
 
     def __init__(self, transform_name, transform_params):
@@ -166,9 +203,10 @@ class RandomParamTransform(object):
             if "max" in rang and "min" in rang:
                 assert rang["max"] - rang["min"] > 0
                 v = np.random.random() * (rang["max"] - rang["min"]) + rang["min"]
-                if(rang["type"] == "float"):
+
+                if rang["type"] == "float":
                     v = float(v)
-                elif(rang["type"] == "int"):
+                elif rang["type"] == "int":
                     v = int(v)
                 else:
                     raise NotImplementedError
@@ -178,9 +216,8 @@ class RandomParamTransform(object):
                 dico[p] = v
             else:
                 raise NotImplementedError
-        trans_opt = DictConfig(dict(params=dico,
-                                    transform=self.transform_name))
 
+        trans_opt = DictConfig(dict(params=dico, transform=self.transform_name))
         random_transform = instantiate_transform(trans_opt, attr="transform")
         return random_transform
 
@@ -189,5 +226,4 @@ class RandomParamTransform(object):
         return self.random_transform(data)
 
     def __repr__(self):
-        return "RandomParamTransform({}, params={})".format(self.transform_name,
-                                                            self.transform_params)
+        return "RandomParamTransform({}, params={})".format(self.transform_name, self.transform_params)
