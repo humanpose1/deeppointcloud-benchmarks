@@ -214,5 +214,5 @@ class InfoNCELoss(nn.Module):
         Sim = (F_0 @ F_1.T) / self.temperature
 
         l_s_sim = torch.log_softmax(Sim, dim=1)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
-        target = torch.arange(0, len(sample_pos_pairs))
+        target = torch.arange(0, len(sample_pos_pairs)).to(sample_pos_pairs.device)
         return self.nll_loss(l_s_sim, target)
