@@ -948,7 +948,7 @@ class CubeCrop(object):
     """
 
 
-    def __init__(self, c: float = 1, rot_x: float = 180, rot_y: float = 180, rot_z: float = 180):
+    def __init__(self, c: float = 1, rot_x: float = 180, rot_y: float = 180, rot_z: float = 180, grid_size_center: float=0.01):
         self.c = c
         self.random_rotation = Random3AxisRotation(rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
         self.grid_sampling = GridSampling3D(grid_size_center, mode="last")

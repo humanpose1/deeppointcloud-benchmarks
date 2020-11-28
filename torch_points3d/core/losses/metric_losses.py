@@ -160,3 +160,59 @@ class BatchHardContrastiveLoss(nn.Module):
         pos_loss = F.relu(furthest_pos - self.pos_thresh).pow(2)
         # neg_loss = F.relu(self.neg_thresh - closest_neg)
         return pos_loss.mean() + neg_loss.mean()
+
+
+class InfoNCELoss(nn.Module):
+    """
+    InfoNCELoss or NXTentloss
+
+    Here is the formula:
+    Parameters
+    ----------
+
+    """
+
+    def __init__(self, temperature=1, num_pos=256, num_hn_samples=1024):
+        nn.Module.__init__(self)
+        self.temperature = temperature
+        self.num_pos = num_pos
+        self.num_hn_samples = num_hn_samples
+        self.nll_loss = nn.NLLLoss()
+
+    def forward(self, F0, F1, positive_pairs, xyz0=None, xyz1=None):
+
+        N0, N1 = len(F0), len(F1)
+        N_pos_pairs = len(positive_pairs)
+        max(N0, N1)
+
+        # sample the positive pair
+
+        if N_pos_pairs > self.num_pos:
+            pos_sel = np.random.choice(N_pos_pairs, self.num_pos, replace=False)
+            sample_pos_pairs = positive_pairs[pos_sel]
+        else:
+            sample_pos_pairs = positive_pairs
+
+        # sample negative pairs
+        sel0 = np.random.choice(N0, min(N0, self.num_hn_samples), replace=False).reshape(-1, 1)
+        sel1 = np.random.choice(N1, min(N1, self.num_hn_samples), replace=False).reshape(-1, 1)
+
+        mask0 = torch.from_numpy(np.logical_not(np.isin(sel0, positive_pairs[:, 0].cpu().numpy())))
+        mask1 = torch.from_numpy(np.logical_not(np.isin(sel1, positive_pairs[:, 1].cpu().numpy())))
+        mask = mask0 & mask1
+
+        negative_pairs = torch.from_numpy(np.hstack([sel0, sel1])).to(sample_pos_pairs)
+        negative_pairs = negative_pairs[mask[:, 0], :]
+        if len(negative_pairs) > 0:
+            pairs = torch.cat([sample_pos_pairs, negative_pairs], dim=0)
+        else:
+            pairs = sample_pos_pairs
+
+        F_0 = F0[pairs[:, 0]]
+        F_1 = F1[pairs[:, 1]]
+
+        Sim = (F_0 @ F_1.T) / self.temperature
+
+        l_s_sim = torch.log_softmax(Sim, dim=1)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
+        target = torch.arange(0, len(sample_pos_pairs))
+        return self.nll_loss(l_s_sim, target)
