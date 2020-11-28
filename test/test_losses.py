@@ -45,7 +45,20 @@ class TestDirichletLoss(unittest.TestCase):
         positive_pairs = torch.tensor([[0, 0], [1, 1]]).long()
         res1 = loss(f0, f1, positive_pairs)
         res2 = loss(f0, f2, positive_pairs)
-        print(res1, res2)
+
+        self.assertGreater(res2.item(), res1.item())
+
+    def test_info_nca_loss(self):
+        loss = InfoNCELoss(temperature=1, num_pos=10, num_hn_samples=0, mode="nca")
+
+        f0 = torch.tensor([[1.0, 0, 0, 0], [1, 0, 1, 0], [0, 0, 1, 0]]).float()
+        f1 = torch.tensor([[1.0, 0, 0, 0], [1, 0, 1, 0], [0, 1, 1, 0]]).float()
+        f2 = torch.tensor([[1, 0.01, 0.5, 0.1], [1, 0, 1, 0], [0, 1, 1, 0]]).float()
+
+        positive_pairs = torch.tensor([[0, 0], [1, 1]]).long()
+        res1 = loss(f0, f1, positive_pairs)
+        res2 = loss(f0, f2, positive_pairs)
+
         self.assertGreater(res2.item(), res1.item())
 
 
