@@ -172,14 +172,12 @@ class InfoNCELoss(nn.Module):
 
     """
 
-    def __init__(self, temperature=1, num_pos=256, num_hn_samples=1024, mode="nce"):
+    def __init__(self, temperature=1, num_pos=256, num_hn_samples=1024):
         nn.Module.__init__(self)
         self.temperature = temperature
         self.num_pos = num_pos
         self.num_hn_samples = num_hn_samples
         self.nll_loss = nn.NLLLoss()
-        assert mode in ["nce", "nca"]
-        self.mode = mode
 
     def forward(self, F0, F1, positive_pairs, xyz0=None, xyz1=None):
 
@@ -213,12 +211,7 @@ class InfoNCELoss(nn.Module):
         F_0 = F0[pairs[:, 0]]
         F_1 = F1[pairs[:, 1]]
 
-        if self.mode == "nce":
-            Sim = (F_0 @ F_1.T) / self.temperature
-        elif self.mode == "nca":
-            Sim = -pdist(F_0, F_1) / self.temperature
-        else:
-            raise NotImplementedError
+        Sim = (F_0 @ F_1.T) / self.temperature
 
         l_s_sim = torch.log_softmax(Sim, dim=1)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
         target = torch.arange(0, len(sample_pos_pairs)).to(sample_pos_pairs.device)
