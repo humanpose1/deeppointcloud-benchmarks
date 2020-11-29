@@ -256,7 +256,7 @@ models:
       params:
         num_pos: 1024
         num_hn_samples: 256
-        temperature: 0.5
+        temperature: 0.05
 
   ms_sparseconv3d_large:
     class: ms_spconv3d.MS_SparseConv3d_Shared

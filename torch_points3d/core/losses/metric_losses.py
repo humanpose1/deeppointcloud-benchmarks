@@ -213,6 +213,57 @@ class InfoNCELoss(nn.Module):
 
         Sim = (F_0 @ F_1.T) / self.temperature
 
-        l_s_sim = torch.log_softmax(Sim, dim=1)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
+        l_s_sim_0 = torch.log_softmax(Sim, dim=1)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
+        l_s_sim_1 = torch.log_softmax(Sim, dim=0)[: len(sample_pos_pairs), : len(sample_pos_pairs)]
         target = torch.arange(0, len(sample_pos_pairs)).to(sample_pos_pairs.device)
-        return self.nll_loss(l_s_sim, target)
+        return 0.5 * (self.nll_loss(l_s_sim_0, target) + self.nll_loss(l_s_sim_1, target))
+
+
+class CicleLoss(nn.Module):
+    def __init__(self, margin=0.4, gamma=80, num_pos=256, num_hn_samples=256):
+        self.margin = margin
+        self.op = 1 + self.margin
+        self.gamma = gamma
+        self.num_pos = num_pos
+        self.num_hn_samples = num_hn_samples
+
+    def forward(self, F0, F1, positive_pairs, xyz0=None, xyz1=None):
+
+        N0, N1 = len(F0), len(F1)
+        N_pos_pairs = len(positive_pairs)
+        max(N0, N1)
+
+        # sample the positive pair
+
+        if N_pos_pairs > self.num_pos:
+            pos_sel = np.random.choice(N_pos_pairs, self.num_pos, replace=False)
+            sample_pos_pairs = positive_pairs[pos_sel]
+        else:
+            sample_pos_pairs = positive_pairs
+
+        # sample negative pairs
+        sel0 = np.random.choice(N0, min(N0, self.num_hn_samples), replace=False).reshape(-1, 1)
+        sel1 = np.random.choice(N1, min(N1, self.num_hn_samples), replace=False).reshape(-1, 1)
+
+        mask0 = torch.from_numpy(np.logical_not(np.isin(sel0, positive_pairs[:, 0].cpu().numpy())))
+        mask1 = torch.from_numpy(np.logical_not(np.isin(sel1, positive_pairs[:, 1].cpu().numpy())))
+        mask = mask0 & mask1
+
+        negative_pairs = torch.from_numpy(np.hstack([sel0, sel1])).to(sample_pos_pairs)
+        negative_pairs = negative_pairs[mask[:, 0], :]
+        if len(negative_pairs) > 0:
+            pairs = torch.cat([sample_pos_pairs, negative_pairs], dim=0)
+        else:
+            pairs = sample_pos_pairs
+
+        F_0 = F0[pairs[:, 0]]
+        F_1 = F1[pairs[:, 1]]
+
+        Sim = F_0 @ F_1.T  # N x N
+        pos_mask = torch.zeros((len(pairs), len(pairs))).to(torch.bool)
+        pos_mask[: len(sample_pos_pairs), : len(sample_pos_pairs)] = True
+        pos_mask = pos_mask.to(Sim.device).reshape(-1)
+        torch.logical_not(pos_mask)
+
+        # compute positive similarity and negative similarity for the circle loss
+        Sim.view(-1)[pos_mask]
