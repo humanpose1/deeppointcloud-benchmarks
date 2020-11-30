@@ -34,6 +34,7 @@ from torch_points3d.metrics.registration_metrics import (
     compute_hit_ratio,
     compute_transfo_error,
     compute_scaled_registration_error,
+    compute_registration_recall,
 )
 
 from torch_points3d.metrics.colored_tqdm import Coloredtqdm as Ctq
@@ -57,6 +58,9 @@ def compute_metrics(
     ransac_thresh=0.02,
     use_teaser=False,
     noise_bound_teaser=0.1,
+    registration_recall_thresh=0.2,
+    xyz_gt=None,
+    xyz_target_gt=None,
 ):
     """
     compute all the necessary metrics
@@ -108,6 +112,10 @@ def compute_metrics(
     res["rre_fgr"] = float(rot_error_fgr.item() < rot_thresh)
     res["rte_fgr"] = float(trans_error_fgr.item() < trans_thresh)
     res["sr_fgr"] = compute_scaled_registration_error(xyz, T_gt, T_fgr).item()
+    if xyz_gt is not None and xyz_target_gt is not None:
+        res["registration_recall_fgr"] = compute_registration_recall(
+            xyz_gt, xyz_target_gt, T_fgr, registration_recall_thresh
+        )
 
     # teaser pp
     if use_teaser:
@@ -120,6 +128,10 @@ def compute_metrics(
         res["rre_teaser"] = float(rot_error_teaser.item() < rot_thresh)
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
         res["sr_teaser"] = compute_scaled_registration_error(xyz, T_gt, T_teaser).item()
+        if xyz_gt is not None and xyz_target_gt is not None:
+            res["registration_recall_teaser"] = compute_registration_recall(
+                xyz_gt, xyz_target_gt, T_teaser, registration_recall_thresh
+            )
 
     if use_ransac:
         raise NotImplementedError
@@ -128,6 +140,10 @@ def compute_metrics(
 
 
 def run(model: BaseModel, dataset: BaseDataset, device, cfg):
+
+    reg_thresh = cfg.data.registration_recall_thresh
+    if reg_thresh is None:
+        reg_thresh = 0.2
     print(time.strftime("%Y%m%d-%H%M%S"))
     dataset.create_dataloaders(
         model, 1, False, cfg.training.num_workers, False,
@@ -153,6 +169,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
                 rand_target = torch.randperm(len(feat_target))[: cfg.data.num_points]
                 res = dict(name_scene=name_scene, name_pair_source=name_pair_source, name_pair_target=name_pair_target)
                 T_gt = estimate_transfo(xyz[matches_gt[:, 0]], xyz_target[matches_gt[:, 1]])
+
                 metric = compute_metrics(
                     xyz[rand],
                     xyz_target[rand_target],
@@ -168,6 +185,9 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
                     ransac_thresh=cfg.data.first_subsampling,
                     use_teaser=cfg.data.use_teaser,
                     noise_bound_teaser=cfg.data.noise_bound_teaser,
+                    xyz_gt=xyz[matches_gt[:, 0]],
+                    xyz_target_gt=xyz_target[matches_gt[:, 1]],
+                    registration_recall_thresh=reg_thresh,
                 )
                 res = dict(**res, **metric)
                 list_res.append(res)

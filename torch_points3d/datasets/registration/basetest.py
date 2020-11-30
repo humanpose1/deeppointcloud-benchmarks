@@ -227,21 +227,22 @@ class BasePCRBTest(Dataset, GeneralFragment):
 
 
     def __init__(
-        self,
-        root,
-        transform=None,
-        pre_transform=None,
-        pre_filter=None,
-        verbose=False,
-        debug=False,
-        max_dist_overlap=0.01,
-        num_pos_pairs=200,
-        self_supervised=False,
-        min_points=100,
-        min_size_block=2,
-        max_size_block=3,
-        ss_transform=None,
-        use_fps=False,
+            self,
+            root,
+            transform=None,
+            pre_transform=None,
+            pre_filter=None,
+            verbose=False,
+            debug=False,
+            max_dist_overlap=0.01,
+            num_pos_pairs=200,
+            self_supervised=False,
+            min_points=100,
+            min_size_block=2,
+            max_size_block=3,
+            ss_transform=None,
+            use_fps=False,
+            is_name_path_int=True,
     ):
 
         """
@@ -259,7 +260,7 @@ class BasePCRBTest(Dataset, GeneralFragment):
         max_size_block: float
             for self supervised, maximum size of the ball where points inside it will be matched
         """
-
+        self.is_name_path_int = is_name_path_int
         self.max_dist_overlap = max_dist_overlap
         self.num_pos_pairs = num_pos_pairs
         self.is_online_matching = False
@@ -300,6 +301,8 @@ class BasePCRBTest(Dataset, GeneralFragment):
         for i in range(11, len(data)):
             point = data[i].split("\n")[0].split(" ")
             arr[i - 11] = np.array([float(p) for p in point])
+        mask = np.prod(~np.isnan(arr), axis=1, dtype=bool)
+        arr = arr[mask, :]
         return arr, field
 
     @property
@@ -338,8 +341,11 @@ class BasePCRBTest(Dataset, GeneralFragment):
                 fragment_path = osp.join(fragment_dir, f_p)
                 out_dir = osp.join(self.processed_dir, "test", "fragment", scene_path)
                 makedirs(out_dir)
-                out_path = osp.join(out_dir, "fragment_{:06d}.pt".format(find_int(f_p)))
-                pos = torch.from_numpy(BasePCRBTest.read_pcd(fragment_path)[0])
+                if(self.is_name_path_int):
+                    out_path = osp.join(out_dir, "fragment_{:06d}.pt".format(find_int(f_p)))
+                else:
+                    out_path = osp.join(out_dir, "{}.pt".format(f_p[:-4]))
+                pos = torch.from_numpy(BasePCRBTest.read_pcd(fragment_path)[0][:, :3]).float()
                 data = Data(pos=pos)
                 if self.pre_transform is not None:
                     data = self.pre_transform(data)
@@ -368,19 +374,25 @@ class BasePCRBTest(Dataset, GeneralFragment):
             path_log = osp.join(self.raw_dir, "test", scene + "_global.txt")
             list_pair = BasePCRBTest.parse_pair_files(path_log)
             for i, pair in enumerate(list_pair):
+                if(self.is_name_path_int):
+                    name_fragment_s = "fragment_{:06d}.pt".format(find_int(pair["source_name"]))
+                    name_fragment_t = "fragment_{:06d}.pt".format(find_int(pair["target_name"]))
+                else:
+                    name_fragment_s = "{}.pt".format(pair["source_name"][:-4])
+                    name_fragment_t = "{}.pt".format(pair["target_name"][:-4])
                 path1 = osp.join(
                     self.processed_dir,
                     "test",
                     "fragment",
                     scene,
-                    "fragment_{:06d}.pt".format(find_int(pair["source_name"])),
+                    name_fragment_s
                 )
                 path2 = osp.join(
                     self.processed_dir,
                     "test",
                     "fragment",
                     scene,
-                    "fragment_{:06d}.pt".format(find_int(pair["target_name"])),
+                    name_fragment_t
                 )
                 data1 = torch.load(path1)
                 data2 = torch.load(path2)

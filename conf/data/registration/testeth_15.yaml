@@ -92,26 +92,19 @@ data:
               transform_name: RandomSphereDropout
               transform_params:
                 radius:
-                  min: 0.5
-                  max: 1.2
-                  type: "float"
-                num_sphere:
-                  min: 1
-                  max: 6
-                  type: "int"
-          - transform: RandomParamTransform
-            params:
-              transform_name: RandomSphereDropout
-              transform_params:
-                radius:
-                  min: 0.08
-                  max: 0.5
-
+                  min: 0.0
+                  max: 1.5
                   type: "float"
                 num_sphere:
                   min: 1
                   max: 10
                   type: "int"
+
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 0
+              radius: 0.5
+
           - transform: RandomSphereDropout
             params:
               num_sphere: 0
@@ -124,35 +117,17 @@ data:
               transform_name: PeriodicSampling
               transform_params:
                 period:
-                  min: 0.09
+                  min: 0.08
                   max: 0.2
                   type: "float"
                 prop:
-                  min: 0.1
-                  max: 0.2
-                  type: "float"
-          - transform: RandomParamTransform
-            params:
-              transform_name: PeriodicSampling
-              transform_params:
-                period:
-                  min: 0.09
-                  max: 0.2
-                  type: "float"
-                prop:
-                  min: 0.1
+                  min: 0.05
                   max: 0.2
                   type: "float"
                 box_multiplier:
-                  value: 10
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
+                  min: 1
+                  max: 6
+                  type: "int"
           - transform: PeriodicSampling
             params:
               period: 0.1
