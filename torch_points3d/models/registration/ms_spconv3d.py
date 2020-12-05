@@ -276,7 +276,7 @@ class MS_SparseConv3d_Shared_Pool(MS_SparseConv3d_Shared):
             self.unet.set_grid_size(self.grid_size[i])
             out = self.unet(input.clone())
             out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-20)
-            outputs.append()
+            outputs.append(out)
 
         if self.pool_mode == "max":
             x = torch.cat([o.x.unsqueeze(0) for o in outputs], 0).max(0)[0]
