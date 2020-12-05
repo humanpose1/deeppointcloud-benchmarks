@@ -261,3 +261,31 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
         self.compute_intermediate_loss(outputs, outputs_target)
 
         return self.output
+
+
+class MS_SparseConv3d_Shared_Pool(MS_SparseConv3d_Shared):
+    def __init__(self, option, model_type, dataset, modules):
+
+        MS_SparseConv3d_Shared.__init__(self, option, model_type, dataset, modules)
+        self.pool_mode = option.pool_mode
+
+    def apply_nn(self, input):
+        # inputs = self.compute_scales(input)
+        outputs = []
+        for i in range(len(self.grid_size)):
+            self.unet.set_grid_size(self.grid_size[i])
+            out = self.unet(input.clone())
+            out.x = out.x / (torch.norm(out.x, p=2, dim=1, keepdim=True) + 1e-20)
+            outputs.append()
+
+        if self.pool_mode == "max":
+            x = torch.cat([o.x.unsqueeze(0) for o in outputs], 0).max(0)[0]
+        elif self.pool_mode == "mean":
+            x = torch.cat([o.x.unsqueeze(0) for o in outputs], 0).mean(0)
+        else:
+            raise NotImplementedError
+
+        out_feat = self.FC_layer(x)
+        if self.normalize_feature:
+            out_feat = out_feat / (torch.norm(out_feat, p=2, dim=1, keepdim=True) + 1e-20)
+        return out_feat, outputs
