@@ -35,30 +35,16 @@ data:
                   type: "float"
                 name_ind:
                   value: "ind_sensors"
-
-          - transform: CubeCrop
-            params:
-              c: 5
-              grid_size_center: 0.02
-    - transform: ComposeTransform
-      params:
-        transform_options:
           - transform: RandomParamTransform
             params:
-              transform_name: FixedSphereDropout
+              transform_name: CubeCrop
               transform_params:
-                radius:
-                  min: 0.4
-                  max: 1.5
+                c:
+                  min: 4
+                  max: 6
                   type: "float"
-                name_ind:
-                  value: "ind_sensors"
-
-          - transform: IrregularSampling
-            params:
-              d_half: 3.5
-              p: 1
-              grid_size_center: 0.01
+                grid_size_center:
+                  value: 0.01
 
     - transform: ComposeTransform
       params:
@@ -73,11 +59,20 @@ data:
                   type: "float"
                 name_ind:
                   value: "ind_sensors"
-
-          - transform: CubeCrop
+          - transform: RandomParamTransform
             params:
-              c: 5.5
-              grid_size_center: 0.02
+              transform_name: IrregularSampling
+              transform_params:
+                d_half:
+                  min: 3
+                  max: 5
+                  type: "float"
+                p:
+                  min: 0.8
+                  max: 2
+                  type: "float"
+                grid_size_center:
+                  value: 0.01
   train_transform:
     - transform: SaveOriginalPosId
     - transform: RandomNoise
@@ -105,7 +100,7 @@ data:
               transform_params:
                 radius:
                   min: 0.08
-                  max: 0.5
+                  max: 0.7
 
                   type: "float"
                 num_sphere:
@@ -125,7 +120,7 @@ data:
               transform_params:
                 period:
                   min: 0.09
-                  max: 0.2
+                  max: 0.3
                   type: "float"
                 prop:
                   min: 0.1
@@ -137,7 +132,7 @@ data:
               transform_params:
                 period:
                   min: 0.09
-                  max: 0.2
+                  max: 0.3
                   type: "float"
                 prop:
                   min: 0.1
@@ -184,10 +179,6 @@ data:
         feat_name: 'ones'
   test_transform:
     - transform: SaveOriginalPosId
-    - transform: FixedSphereDropout
-      params:
-        radius: 0.6
-        name_ind: "ind_sensors"
     - transform: XYZFeature
       params:
         add_x: True
