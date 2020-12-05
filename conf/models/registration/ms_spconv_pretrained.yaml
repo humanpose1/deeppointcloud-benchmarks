@@ -190,7 +190,7 @@ models:
     weight_name: "latest"
     conv_type: "SPARSE"
     loss_mode: "match"
-    pool_mode: "large"
+    pool_mode: "max"
     define_constants:
       num_scales: 3
       out_feat: 32
