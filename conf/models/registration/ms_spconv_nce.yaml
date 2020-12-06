@@ -315,7 +315,7 @@ models:
     conv_type: "SPARSE"
     loss_mode: "match"
     define_constants:
-      num_scales: 1
+      num_scales: 3
       out_feat: 32
     backend: "torchsparse"
     option_unet:
@@ -353,7 +353,7 @@ models:
           dilation: [1, 1, 1, 1]
     normalize_feature: True
     mlp_cls:
-      nn: [num_scales*out_feat, out_feat]
+      nn: [num_scales*out_feat, out_feat, out_feat]
       bn_momentum: 0.05
     metric_loss:
       class: "InfoNCELoss"
