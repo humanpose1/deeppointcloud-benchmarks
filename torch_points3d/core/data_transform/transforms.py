@@ -836,16 +836,20 @@ class RandomSphereDropout(object):
         radius of the spheres
     """
 
-    def __init__(self, num_sphere: int = 10, radius: float = 5):
+    def __init__(self, num_sphere: int = 10, radius: float = 5, grid_size_center: float=0.01):
         self.num_sphere = num_sphere
         self.radius = radius
+        self.grid_sampling = GridSampling3D(grid_size_center, mode="last")
 
     def __call__(self, data):
 
+        data_c = self.grid_sampling(data.clone())
+        list_ind = torch.randint(0, len(data_c.pos), (self.num_sphere,))
+        center = data_c.pos[list_ind]
         pos = data.pos
-        list_ind = torch.randint(0, len(pos), (self.num_sphere,))
+        # list_ind = torch.randint(0, len(pos), (self.num_sphere,))
 
-        ind, dist = ball_query(data.pos, data.pos[list_ind], radius=self.radius, max_num=-1, mode=1)
+        ind, dist = ball_query(data.pos, center, radius=self.radius, max_num=-1, mode=1)
         ind = ind[dist[:, 0] > 0]
         mask = torch.ones(len(pos), dtype=torch.bool)
         mask[ind[:, 0]] = False

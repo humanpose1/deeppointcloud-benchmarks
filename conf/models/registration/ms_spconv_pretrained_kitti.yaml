@@ -12,7 +12,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -67,7 +67,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -122,7 +122,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -186,7 +186,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -241,7 +241,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3, 0.4, 0.5]
+      grid_size: [0.2, 0.3, 0.5, 0.75, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -296,7 +296,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3, 0.4, 0.5]
+      grid_size: [0.2, 0.3, 0.5, 0.75, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -352,7 +352,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
@@ -407,7 +407,7 @@ models:
     option_unet:
       input_nc: 1
       num_scales: num_scales
-      grid_size: [0.1, 0.2, 0.3]
+      grid_size: [0.2, 0.5, 1]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:

@@ -8,15 +8,15 @@ data:
   min_size_block: 5
   max_size_block: 7
   num_pos_pairs: 30000
-  min_points: 5000
+  min_points: 4000
   num_points: 5000
-  tau_1: 0.1
+  tau_1: 0.5
   tau_2: 0.05
   rot_thresh: 4
   trans_thresh: 0.15
   sym: True
   use_teaser: True
-  noise_bound_teaser: 0.1
+  noise_bound_teaser: 0.5
   pre_transforms:
     - transform: GridSampling3D
       params:
@@ -24,76 +24,50 @@ data:
   ss_transform:
     - transform: CubeCrop
       params:
-        c: 10
+        c: 15
         grid_size_center: 0.1
     - transform: IrregularSampling
       params:
-        d_half: 11
+        d_half: 13
         p: 1
         grid_size_center: 0.1
     - transform: CubeCrop
       params:
-        c: 7
+        c: 12
         grid_size_center: 0.1
   train_transform:
     - transform: SaveOriginalPosId
     - transform: RandomNoise
       params:
-        sigma: 0.01
-        clip: 0.05
+        sigma: 0.1
+        clip: 0.5
     - transform: LotteryTransform
       params:
         transform_options:
           - transform: RandomSphereDropout
             params:
-              num_sphere: 5
-              radius: 2
+              num_sphere: 6
+              radius: 1.5
+              grid_size_center: 0.5
           - transform: RandomSphereDropout
             params:
-              num_sphere: 2
+              num_sphere: 3
               radius: 3
+              grid_size_center: 0.5
           - transform: RandomSphereDropout
             params:
               num_sphere: 0
               radius: 0.0
-    - transform: LotteryTransform
+    - transform: RandomParamTransform
       params:
-        transform_options:
-          - transform: PeriodicSampling
-            params:
-              period: 0.4
-              prop: 0.2
-          - transform: PeriodicSampling
-            params:
-              period: 0.5
-              prop: 0.2
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.6
-              prop: 0.2
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.2
-              prop: 0.1
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
+        transform_name: GridSampling3D
+        transform_params:
+          size:
+            min: 0.1
+            max: 0.7
+            type: "float"
+          mode:
+            value: "last"
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
