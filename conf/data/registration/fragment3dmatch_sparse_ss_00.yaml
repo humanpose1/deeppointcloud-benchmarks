@@ -50,7 +50,7 @@ data:
           num_sphere:
             min: 5
             max: 15
-            type: "float"
+            type: "int"
           radius:
             min: 0.08
             max: 0.2
