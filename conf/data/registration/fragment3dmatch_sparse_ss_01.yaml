@@ -48,13 +48,15 @@ data:
         transform_name: PeriodicSampling
         transform_params:
           period:
-            min: 0.01
+            min: 0.03
             max: 0.06
             type: "float"
           prop:
             min: 0.3
-            max: 0.7
+            max: 1.0
             type: "float"
+          box_multiplier:
+            value: 10
     - transform: RandomNoise
       params:
         sigma: 0.01
