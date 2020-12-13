@@ -49,11 +49,11 @@ data:
         transform_params:
           num_sphere:
             min: 5
-            max: 15
+            max: 10
             type: "int"
           radius:
             min: 0.08
-            max: 0.2
+            max: 0.15
             type: "float"
     - transform: RandomNoise
       params:
