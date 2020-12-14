@@ -48,11 +48,11 @@ data:
         transform_name: PeriodicSampling
         transform_params:
           period:
-            min: 0.03
-            max: 0.06
+            min: 0.01
+            max: 0.05
             type: "float"
           prop:
-            min: 0.3
+            min: 0.4
             max: 1.0
             type: "float"
           box_multiplier:
