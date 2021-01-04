@@ -273,7 +273,7 @@ class NormalFeature(object):
     """
 
     def __call__(self, data):
-        if data.norm is None:
+        if getattr(data, "norm", None) is None:
             raise NotImplementedError("TODO: Implement normal computation")
 
         norm = data.norm
