@@ -65,7 +65,7 @@ class Random3AxisRotation(object):
             pos = data.pos.float()
             M = self.generate_random_rotation_matrix()
             data.pos = pos @ M.T
-            if data.norm is not None:
+            if getattr(data, "norm", None) is not None:
                 data.norm = data.norm.float() @ M.T
         return data
 
