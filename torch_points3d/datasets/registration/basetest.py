@@ -357,6 +357,8 @@ class BasePCRBTest(Dataset, GeneralFragment):
 
                     ind_sensors, _ = dense_knn(data.pos.unsqueeze(0).float(), center, k=1)
                     data.ind_sensors = ind_sensors[0][0]
+                else:
+                    log.warn("No censors data")
 
                 torch.save(data, out_path)
 
