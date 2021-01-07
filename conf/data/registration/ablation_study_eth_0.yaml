@@ -20,7 +20,7 @@ data:
   pre_transforms:
     - transform: GridSampling3D
       params:
-        size: ${data.first_subsampling}
+        size: 0.02
   ss_transform:
     - transform: ComposeTransform
       params:
