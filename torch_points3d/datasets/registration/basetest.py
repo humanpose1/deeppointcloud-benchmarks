@@ -436,7 +436,7 @@ class BasePCRBTest(Dataset, GeneralFragment):
             new_pair = torch.from_numpy(match["pair"])
             trans = torch.tensor(match["trans"]).reshape(3, 4)
             data_target.pos = data_target.pos @ trans[:3, :3].T + trans[:3, 3]
-            if data_target.norm is not None:
+            if getattr(data_target, "norm", None) is not None:
                 data_target.norm = data_target.norm @ trans[:3, :3].T
         else:
             if random.random() < 0.5:
