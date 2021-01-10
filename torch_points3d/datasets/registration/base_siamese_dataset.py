@@ -140,10 +140,10 @@ class GeneralFragment(object):
     def get_fragment(self, idx):
 
         data_source, data_target, new_pair = self.get_raw_pair(idx)
+
         if self.transform is not None:
             data_source = self.transform(data_source)
             data_target = self.transform(data_target)
-
         if hasattr(data_source, "multiscale"):
             batch = MultiScalePair.make_pair(data_source, data_target)
         else:

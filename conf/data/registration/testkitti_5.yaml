@@ -1,0 +1,159 @@
+data:
+  task: registration
+  name: Kitti
+  class: kitti.KITTIDataset
+  dataroot: data
+  self_supervised: True
+  first_subsampling: 0.3
+  max_dist_overlap: 0.5
+  min_size_block: 10
+  max_size_block: 20
+  num_pos_pairs: 30000
+  min_points: 3000
+  num_points: 5000
+  tau_1: 0.5
+  tau_2: 0.05
+  rot_thresh: 4
+  trans_thresh: 0.15
+  sym: True
+  use_teaser: True
+  noise_bound_teaser: 0.5
+  pre_transforms:
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+  ss_transform:
+    - transform: CubeCrop
+      params:
+        c: 27
+        grid_size_center: 0.01
+  train_transform:
+    - transform: SaveOriginalPosId
+    - transform: RandomNoise
+      params:
+        sigma: 0.1
+        clip: 0.5
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 18
+              radius: 3
+              grid_size_center: 0.5
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 10
+              radius: 3
+              grid_size_center: 0.5
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 8
+              radius: 5
+              grid_size_center: 0.5
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 0
+              radius: 0.0
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: RandomParamTransform
+            params:
+              transform_name: PeriodicSampling
+              transform_params:
+                period:
+                  min: 0.7
+                  max: 2
+                  type: "float"
+                prop:
+                  min: 0.25
+                  max: 0.5
+                  type: "float"
+          - transform: RandomParamTransform
+            params:
+              transform_name: PeriodicSampling
+              transform_params:
+                period:
+                  min: 0.3
+                  max: 2
+                  type: "float"
+                prop:
+                  min: 0.25
+                  max: 0.5
+                  type: "float"
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 1
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 360
+        rot_y: 360
+        rot_z: 360
+    - transform: RandomScaleAnisotropic
+      params:
+        scales: [0.9,1.2]
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: ShiftVoxels
+    - transform: AddOnes
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'ones'
+  val_transform:
+    - transform: SaveOriginalPosId
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 180
+        rot_y: 180
+        rot_z: 180
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: AddOnes
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'ones'
+  test_transform:
+    - transform: SaveOriginalPosId
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 90
+        rot_y: 90
+        rot_z: 90
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: AddOnes
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'ones'

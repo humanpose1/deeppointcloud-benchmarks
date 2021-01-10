@@ -75,6 +75,7 @@ class TestPairETH(BasePCRBTest):
                  ss_transform=None,
                  use_fps=False):
         self.link_pairs = "https://cloud.mines-paristech.fr/index.php/s/aIRBieRybts3kEs/download"
+        self.link_pose = "https://cloud.mines-paristech.fr/index.php/s/U0F6CFKDCtXcAl7/download"
         BasePCRBTest.__init__(self,
                               root=root,
                               transform=transform,
@@ -115,6 +116,14 @@ class TestPairETH(BasePCRBTest):
                     os.remove(file_to_remove)
             os.remove(osp.join(folder, name+".zip"))
         self.download_pairs(folder)
+        req = requests.get(self.link_pose)
+        with open(osp.join(folder, "pose.zip"), "wb") as archive:
+            archive.write(req.content)
+        with ZipFile(osp.join(folder, "pose.zip"), "r") as zip_obj:
+            log.info("extracting pose")
+            zip_obj.extractall(folder)
+        os.remove(osp.join(folder, "pose.zip"))
+
 
     def process(self):
         super().process()
