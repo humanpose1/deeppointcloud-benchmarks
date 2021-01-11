@@ -39,7 +39,7 @@ class PatchKPConv(BackboneBasedModel):
 
         BackboneBasedModel.__init__(self, option, model_type, dataset, modules)
         self.set_last_mlp(option.mlp_cls)
-        self.loss_names = ["loss_reg", "loss", "internal"]
+        self.loss_names = ["loss", "loss_reg", "internal"]
 
     def set_last_mlp(self, last_mlp_opt):
 
@@ -156,7 +156,7 @@ class FragmentKPConv(FragmentBaseModel, UnwrappedUnetBasedModel):
         self.FC_layer.add_module("Last", Lin(in_feat, self.out_channels, bias=False))
         self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
-        self.loss_names = ["loss_reg", "loss"]
+        self.loss_names = ["loss", "loss_reg"]
 
         self.lambda_reg = self.get_from_opt(option, ["loss_weights", "lambda_reg"])
         if self.lambda_reg:

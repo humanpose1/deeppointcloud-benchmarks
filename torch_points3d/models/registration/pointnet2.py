@@ -30,7 +30,7 @@ class PatchPointNet2_D(BackboneBasedModel):
 
         # Last MLP
         self.set_last_mlp(option.mlp_cls)
-        self.loss_names = ["loss_reg", "loss", "internal"]
+        self.loss_names = ["loss", "loss_reg", "internal"]
 
     def set_last_mlp(self, last_mlp_opt):
 
@@ -122,7 +122,7 @@ class FragmentPointNet2_D(UnetBasedModel, FragmentBaseModel):
         self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
         self.out_channels = option.out_channels
-        self.loss_names = ["loss_reg", "loss"]
+        self.loss_names = ["loss", "loss_reg"]
         self.metric_loss_module, self.miner_module = UnetBasedModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )

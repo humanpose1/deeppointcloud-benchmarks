@@ -36,15 +36,13 @@ def main(cfg):
         cfg.training.num_workers,
         model.conv_type == "PARTIAL_DENSE" and getattr(cfg.training, "precompute_multi_scale", False),
     )
-    
+    print(dataset)
     # Verify attributes in dataset
-    model.verify_data(dataset.train_dataset[0])
-
     data_module = convert_to_lightning_data_module(dataset)
+    model.verify_data(dataset.train_dataset[0])
     model = convert_to_lightning_module(model)
     model.tracker_options = cfg.get("tracker_options", {})
     model.trackers = data_module.trackers
-
     monitor = getattr(cfg, "monitor", None)
     callbacks = []
     if monitor is not None:

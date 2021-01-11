@@ -76,6 +76,7 @@ class LitLightningModule(LightningModule):
         self.tracker_options = {}
 
     def forward(self, batch, batch_idx):
+        
         self.model.set_input(batch, self.device)
         self.model.forward()
 
@@ -85,7 +86,8 @@ class LitLightningModule(LightningModule):
         for loss_name in self.model.loss_names:
             losses.append(getattr(self.model, loss_name, None))
         if len(losses) > 1:
-            raise NotImplementedError
+            return losses[0]
+            # raise NotImplementedError
         return losses[0]
 
     def step(self, batch, batch_idx, optimizer_idx = None, stage = "train"):
@@ -108,7 +110,7 @@ class LitLightningModule(LightningModule):
     def on_train_epoch_start(self) -> None:
         self.reset_tracker("train")
         self.on_stage_epoch_start("train")
-        self.on_stage_epoch_start("val")
+        # self.on_stage_epoch_start("val")
 
     def on_val_epoch_start(self) -> None:
         self.reset_tracker("val")
