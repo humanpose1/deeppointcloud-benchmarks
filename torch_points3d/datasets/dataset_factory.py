@@ -57,7 +57,6 @@ class LiftDataModule(LightningDataModule):
         self.trackers = {}
 
         for key, value in vars(dataset).items():
-            print(key)
             setattr(self, key, value)
 
         for stage in ["train", "val", "test"]:

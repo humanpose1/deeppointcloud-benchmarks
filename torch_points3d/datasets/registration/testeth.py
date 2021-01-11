@@ -158,6 +158,12 @@ class ETHDataset(BaseSiameseDataset):
                                          min_points=dataset_opt.min_points,
                                          ss_transform=ss_transform,
                                          use_fps=dataset_opt.use_fps)
+        self.val_dataset = TestPairETH(root=self._data_path,
+                                        pre_transform=pre_transform,
+                                        transform=test_transform,
+                                        max_dist_overlap=dataset_opt.max_dist_overlap,
+                                        num_pos_pairs=dataset_opt.num_pos_pairs,
+                                        self_supervised=False)
         self.test_dataset = TestPairETH(root=self._data_path,
                                         pre_transform=pre_transform,
                                         transform=test_transform,
