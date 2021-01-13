@@ -22,7 +22,7 @@ class PointNet(BaseModel):
         self._build_model()
 
         self.loss_names = ["loss_seg", "loss_internal"]
-        
+
         self.visual_names = ["data_visual"]
 
     def set_input(self, data, device):
@@ -49,22 +49,18 @@ class PointNet(BaseModel):
     def forward(self, *args, **kwargs):
         x = self.pointnet_seg(self.input_features, self.input.batch)
         self.output = x
-        
-        internal_loss = self.get_internal_loss()
-        
-        if self.labels is not None:
-            self.loss_seg = F.cross_entropy(
-                self.output, self.labels, ignore_index=IGNORE_LABEL
-            )
-            self.loss_internal = (internal_loss if internal_loss.item() != 0 else 0) * 0.001
-            self.loss = self.loss_seg + self.loss_internal
-
         self.data_visual = self.input
         self.data_visual.pred = torch.max(self.output, -1)[1]
         return self.output
 
-    def backward(self):
-        self.loss.backward()
+    def _compute_loss(self):
+        internal_loss = self.get_internal_loss()
+        if self.labels is not None:
+            self.loss_seg = F.cross_entropy(self.output, self.labels, ignore_index=IGNORE_LABEL)
+            self.loss_internal = (internal_loss if internal_loss.item() != 0 else 0) * 0.001
+            self._loss = self.loss_seg + self.loss_internal
+        else:
+            raise ValueError("need labels to compute the loss")
 
 
 class SegPointNetModel(BaseModel):
@@ -94,8 +90,7 @@ class SegPointNetModel(BaseModel):
         x = self.pointnet_seg.forward_embedding(self.pos, self.batch_idx)
         x = self.seg_nn(x)
         self.output = F.log_softmax(x, dim=-1)
-        self.loss = F.nll_loss(self.output, self.labels)
         return self.output
 
-    def backward(self):
-        self.loss.backward()
+    def _compute_loss(self):
+        self._loss = F.nll_loss(self.output, self.labels)

@@ -51,7 +51,7 @@ class BaseMS_Minkowski(FragmentBaseModel):
         FragmentBaseModel.__init__(self, option)
         self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
-        self.loss_names = ["loss", "loss_reg"]
+        self.loss_names = []
         self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )

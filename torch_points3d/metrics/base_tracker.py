@@ -4,10 +4,12 @@ import torch
 from typing import Dict, Any
 import wandb
 from torch.utils.tensorboard import SummaryWriter
+import pytorch_lightning as pl
 import logging
 
 from torch_points3d.metrics.confusion_matrix import ConfusionMatrix
 from torch_points3d.models import model_interface
+
 
 log = logging.getLogger(__name__)
 
@@ -122,3 +124,17 @@ class BaseTracker:
             string += "%s: %.2f," % (str(key), value)
         string += "}"
         return string
+
+
+class LightningBaseTracker(pl.LightningModule):
+    def __init__(self):
+        # metric1 = Metric1()
+        super().__init__()
+
+    def forward(self, models, **kwargs):
+        # res = self.metric1(a, b)
+        raise NotImplementedError("one pass that track metrics we want")
+
+    def finalize(self):
+        # metric1.compute()
+        raise NotImplementedError("aggregate metrics")

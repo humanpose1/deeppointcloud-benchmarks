@@ -23,7 +23,6 @@ class APIModel(BaseModel):
             "unet", dataset.feature_dimension, config=option.backbone, backend=option.get("backend", "minkowski")
         )
         self.head = nn.Sequential(nn.Linear(self.backbone.output_nc, dataset.num_classes))
-        self.loss_names = ["loss_seg"]
 
     def set_input(self, data, device):
         self.batch_idx = data.batch.squeeze()
@@ -37,16 +36,17 @@ class APIModel(BaseModel):
         features = self.backbone(self.input).x
         logits = self.head(features)
         self.output = F.log_softmax(logits, dim=-1)
+
+    def _compute_loss(self):
+        if self._weight_classes is not None:
+            self._weight_classes = self._weight_classes.to(self.output.device)
         if self.labels is not None:
-            self.loss_seg = F.nll_loss(self.output, self.labels, ignore_index=IGNORE_LABEL)
-
-    def backward(self):
-        self.loss_seg.backward()
-
+            self._loss = F.nll_loss(self.output, self.labels, weight=self._weight_classes, ignore_index=IGNORE_LABEL)
+        else:
+            raise ValueError("need labels to compute the loss")
 
 
 class MS_SparseConvModel(APIModel):
-
     def __init__(self, option, model_type, dataset, modules):
         BaseModel.__init__(self, option)
         option_unet = option.option_unet
@@ -65,7 +65,7 @@ class MS_SparseConvModel(APIModel):
         )
         if option.mlp_cls is not None:
             last_mlp_opt = option.mlp_cls
-            
+
             self.FC_layer = Seq()
             for i in range(1, len(last_mlp_opt.nn)):
                 self.FC_layer.append(
@@ -78,14 +78,13 @@ class MS_SparseConvModel(APIModel):
                     )
                 )
             if last_mlp_opt.dropout:
-                self.FC_layer.append(Dropout(p=last_mlp_opt.dropout))
+                self.FC_layer.append(nn.Dropout(p=last_mlp_opt.dropout))
         else:
             self.FC_layer = torch.nn.Identity()
         self.head = nn.Sequential(nn.Linear(option.output_nc, dataset.num_classes))
-        self.loss_names = ["loss_seg"]
 
     def apply_nn(self, input):
-        
+
         outputs = []
         for i in range(len(self.grid_size)):
             self.unet.set_grid_size(self.grid_size[i])
@@ -102,8 +101,4 @@ class MS_SparseConvModel(APIModel):
     def forward(self, *args, **kwargs):
         logits, _ = self.apply_nn(self.input)
         self.output = F.log_softmax(logits, dim=-1)
-        if self.labels is not None:
-            self.loss_seg = F.nll_loss(self.output, self.labels, ignore_index=IGNORE_LABEL)
-
-    def backward(self):
-        self.loss_seg.backward()
+        return self.output

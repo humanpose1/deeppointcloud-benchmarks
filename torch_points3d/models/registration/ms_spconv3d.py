@@ -96,7 +96,7 @@ class BaseMS_SparseConv3d(FragmentBaseModel):
         FragmentBaseModel.__init__(self, option)
         self.mode = option.loss_mode
         self.normalize_feature = option.normalize_feature
-        self.loss_names = ["loss", "loss_reg"]
+        self.loss_names = []
         self.metric_loss_module, self.miner_module = FragmentBaseModel.get_metric_loss_and_miner(
             getattr(option, "metric_loss", None), getattr(option, "miner", None)
         )
@@ -233,7 +233,7 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
                 xyz = self.input.pos
                 xyz_target = self.input_target.pos
                 loss_i = self.int_metric_loss(outputs[i].x, outputs_target[i].x, self.match[:, :2], xyz, xyz_target)
-                self.loss += w * loss_i
+                self._loss += w * loss_i
                 setattr(self, "loss_intermediate_loss_{}".format(i), loss_i)
 
     def apply_nn(self, input):
@@ -254,13 +254,12 @@ class MS_SparseConv3d_Shared(BaseMS_SparseConv3d):
         self.output, outputs = self.apply_nn(self.input)
         if self.match is None:
             return self.output
-
         self.output_target, outputs_target = self.apply_nn(self.input_target)
-        self.compute_loss()
-
-        self.compute_intermediate_loss(outputs, outputs_target)
-
         return self.output
+
+    def _compute_loss(self):
+        super._compute_loss()
+        self.compute_intermediate_loss(self.outputs, self.outputs_target)
 
 
 class MS_SparseConv3d_Shared_Pool(MS_SparseConv3d_Shared):
