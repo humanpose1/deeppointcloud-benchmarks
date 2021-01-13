@@ -1,8 +1,8 @@
 models:
-  # TODO ADD TUM KITTI MODELNET
+  # TODO ADD
   ms_sparseconv3d_shared_pretrained_3_network_A_3dm_eth:
     class: ms_spconv3d.MS_SparseConv3d_Shared
-    path_pretrained: ""
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-11-03/12-07-15/ms_sparseconv3d_shared_pretrained_with_int_loss.pt"
     weight_name: "latest"
     conv_type: "SPARSE"
     loss_mode: "match"
@@ -55,6 +55,117 @@ models:
         pos_thresh: 0.1
         neg_thresh: 1.4
 
+  ms_sparseconv3d_shared_pretrained_3_network_B_3dm_1n_eth:
+    class: ms_spconv3d.MS_SparseConv3d_Shared
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-29/15-28-48/sparseconv3d_simple_large.pt"
+    weight_name: "latest"
+    define_constants:
+      num_scales: 3
+      out_feat: 32
+    backend: "torchsparse"
+    option_unet:
+      input_nc: 1
+      num_scales: num_scales
+      grid_size: [0.06, 0.09, 0.135]
+      post_mlp_nn: [64, 32]
+      backbone:
+        down_conv:
+          module_name: ResNetDown
+          dimension: 3
+          down_conv_nn:
+            [
+              [FEAT, 32],
+              [32, 64],
+              [64, 128],
+              [128, 256]
+            ]
+          kernel_size: [5, 3, 3, 3]
+          stride: [1, 2, 2, 2]
+          dilation: [1, 1, 1, 1]
+        up_conv:
+          module_name: ResNetUp
+          dimension: 3
+          bn_momentum: 0.05
+          up_conv_nn:
+            [
+              [256, 64],
+              [64 + 128, 64],
+              [64 + 64, 64],
+              [64 + 32, 64]
+            ]
+          kernel_size: [3, 3, 3, 3]
+          stride: [2, 2, 2, 1]
+          dilation: [1, 1, 1, 1]
+    normalize_feature: True
+    mlp_cls:
+      nn: [num_scales*out_feat, out_feat, out_feat]
+      bn_momentum: 0.05
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+  ms_sparseconv3d_shared_pretrained_3_network_B_3dm_10n_eth:
+    # temporary pretrained
+    class: ms_spconv3d.MS_SparseConv3d_Shared
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/benchmark/benchmark-ms_sparseconv3d_B_head_10-20210114_114944/ms_sparseconv3d_B_head_10.pt"
+    weight_name: "latest"
+    define_constants:
+      num_scales: 3
+      out_feat: 32
+    backend: "torchsparse"
+    option_unet:
+      input_nc: 1
+      num_scales: num_scales
+      grid_size: [0.06, 0.09, 0.135]
+      post_mlp_nn: [64, 32]
+      backbone:
+        down_conv:
+          module_name: ResNetDown
+          dimension: 3
+          down_conv_nn:
+            [
+              [FEAT, 32],
+              [32, 64],
+              [64, 128],
+              [128, 256]
+            ]
+          kernel_size: [5, 3, 3, 3]
+          stride: [1, 2, 2, 2]
+          dilation: [1, 1, 1, 1]
+        up_conv:
+          module_name: ResNetUp
+          dimension: 3
+          bn_momentum: 0.05
+          up_conv_nn:
+            [
+              [256, 64],
+              [64 + 128, 64],
+              [64 + 64, 64],
+              [64 + 32, 64]
+            ]
+          kernel_size: [3, 3, 3, 3]
+          stride: [2, 2, 2, 1]
+          dilation: [1, 1, 1, 1]
+    normalize_feature: True
+    mlp_cls:
+      nn: [num_scales*out_feat, out_feat, out_feat]
+      bn_momentum: 0.05
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
   ms_sparseconv3d_shared_pretrained_3_network_B_3dm_eth:
     class: ms_spconv3d.MS_SparseConv3d_Shared
     conv_type: "SPARSE"
@@ -69,6 +180,117 @@ models:
       input_nc: 1
       num_scales: num_scales
       grid_size: [0.06, 0.09, 0.135]
+      post_mlp_nn: [64, 32]
+      backbone:
+        down_conv:
+          module_name: ResNetDown
+          dimension: 3
+          down_conv_nn:
+            [
+              [FEAT, 32],
+              [32, 64],
+              [64, 128],
+              [128, 256]
+            ]
+          kernel_size: [5, 3, 3, 3]
+          stride: [1, 2, 2, 2]
+          dilation: [1, 1, 1, 1]
+        up_conv:
+          module_name: ResNetUp
+          dimension: 3
+          bn_momentum: 0.05
+          up_conv_nn:
+            [
+              [256, 64],
+              [64 + 128, 64],
+              [64 + 64, 64],
+              [64 + 32, 64]
+            ]
+          kernel_size: [3, 3, 3, 3]
+          stride: [2, 2, 2, 1]
+          dilation: [1, 1, 1, 1]
+    normalize_feature: True
+    mlp_cls:
+      nn: [num_scales*out_feat, out_feat, out_feat]
+      bn_momentum: 0.05
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+
+  ms_sparseconv3d_shared_pretrained_1_network_B_3dm_eth:
+    class: ms_spconv3d.MS_SparseConv3d_Shared
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-11-13/10-56-34/ms_sparseconv3d_shared_pretrained_with_int_loss_large.pt"
+    weight_name: "latest"
+    define_constants:
+      num_scales: 1
+      out_feat: 32
+    backend: "torchsparse"
+    option_unet:
+      input_nc: 1
+      num_scales: num_scales
+      grid_size: [0.06]
+      post_mlp_nn: [64, 32]
+      backbone:
+        down_conv:
+          module_name: ResNetDown
+          dimension: 3
+          down_conv_nn:
+            [
+              [FEAT, 32],
+              [32, 64],
+              [64, 128],
+              [128, 256]
+            ]
+          kernel_size: [5, 3, 3, 3]
+          stride: [1, 2, 2, 2]
+          dilation: [1, 1, 1, 1]
+        up_conv:
+          module_name: ResNetUp
+          dimension: 3
+          bn_momentum: 0.05
+          up_conv_nn:
+            [
+              [256, 64],
+              [64 + 128, 64],
+              [64 + 64, 64],
+              [64 + 32, 64]
+            ]
+          kernel_size: [3, 3, 3, 3]
+          stride: [2, 2, 2, 1]
+          dilation: [1, 1, 1, 1]
+    normalize_feature: True
+    mlp_cls:
+      nn: [num_scales*out_feat, out_feat, out_feat]
+      bn_momentum: 0.05
+    metric_loss:
+      class: "ContrastiveHardestNegativeLoss"
+      params:
+        num_pos: 1024
+        num_hn_samples: 256
+        pos_thresh: 0.1
+        neg_thresh: 1.4
+
+  ms_sparseconv3d_shared_pretrained_1_network_B_3dm_1n_eth:
+    class: ms_spconv3d.MS_SparseConv3d_Shared
+    conv_type: "SPARSE"
+    loss_mode: "match"
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-10-29/15-28-48/sparseconv3d_simple_large.pt"
+    weight_name: "latest"
+    define_constants:
+      num_scales: 1
+      out_feat: 32
+    backend: "torchsparse"
+    option_unet:
+      input_nc: 1
+      num_scales: num_scales
+      grid_size: [0.06]
       post_mlp_nn: [64, 32]
       backbone:
         down_conv:
