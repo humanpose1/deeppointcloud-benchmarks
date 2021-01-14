@@ -3,12 +3,17 @@ import logging
 import torch
 from torch_geometric.nn.unpool import knn_interpolate
 
+from pytorch_lightning.metrics import Metric, ConfusionMatrix
+
+
 from torch_points3d.metrics.confusion_matrix import ConfusionMatrix
 from torch_points3d.metrics.segmentation_tracker import SegmentationTracker
 from torch_points3d.metrics.base_tracker import BaseTracker, meter_value
+from torch_points3d.metrics.base_tracker import LightningBaseTracker
 from torch_points3d.datasets.segmentation import IGNORE_LABEL
 from torch_points3d.core.data_transform import SaveOriginalPosId
 from torch_points3d.models import model_interface
+
 
 log = logging.getLogger(__name__)
 

@@ -2,6 +2,10 @@ from typing import Dict, Any
 import torch
 import numpy as np
 
+from pytorch_lightning.metrics import Accuracy, ConfusionMatrix
+from torch_points3d.metrics.base_tracker import LightningBaseTracker
+
+
 from torch_points3d.metrics.confusion_matrix import ConfusionMatrix
 from torch_points3d.metrics.base_tracker import BaseTracker, meter_value
 from torch_points3d.metrics.meters import APMeter
@@ -106,3 +110,16 @@ class SegmentationTracker(BaseTracker):
     @property
     def metric_func(self):
         return self._metric_func
+
+
+class LightningSegmentationTracker(LightningBaseTracker):
+    def __init__(self, num_classes: int, ignore_label: int = IGNORE_LABEL):
+        super().__init__()
+        self._num_classes = num_classes
+        self._ignore_label = ignore_label
+        self.confusion_matrix_metric = ConfusionMatrix(num_classes=num_classes)
+
+    def forward(self, model: model_interface.TrackerInterface, **kwargs):
+        outputs = model.get_output()
+        targets = model.get_labels()
+        self.confusion_matrix_metric(outputs, targets)

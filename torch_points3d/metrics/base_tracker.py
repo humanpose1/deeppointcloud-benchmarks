@@ -131,7 +131,7 @@ class LightningBaseTracker(pl.LightningModule):
         # metric1 = Metric1()
         super().__init__()
 
-    def forward(self, models, **kwargs):
+    def forward(self, model: model_interface.TrackerInterface, **kwargs):
         # res = self.metric1(a, b)
         raise NotImplementedError("one pass that track metrics we want")
 
