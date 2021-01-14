@@ -57,7 +57,7 @@ models:
     class: ms_spconv3d.MS_SparseConv3d_Shared
     conv_type: "SPARSE"
     loss_mode: "match"
-    path_pretrained: "???"
+    path_pretrained: "/media/admincaor/DataHDD2To/mines/code/deeppointcloud-benchmarks/outputs/benchmark/benchmark-ms_sparseconv3d_shared_pretrained_3_network_large-20210110_213238/ms_sparseconv3d_shared_pretrained_3_network_large.pt"
     weight_name: "latest"
     define_constants:
       num_scales: 3
