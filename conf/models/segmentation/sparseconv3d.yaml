@@ -35,7 +35,7 @@ models:
                     ]
                 kernel_size: 3
                 stride: [2, 2, 2, 2, 1]
-    MS_SmallUnet_Pretrained:
+    MS_SmallUnet:
         class: sparseconv3d.MS_SparseConvModel
         path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/2020-11-13/10-56-34/ms_sparseconv3d_shared_pretrained_with_int_loss_large.pt"
         weight_name: "latest"
