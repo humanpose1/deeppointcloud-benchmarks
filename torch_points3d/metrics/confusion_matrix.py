@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import os
 
+import pytorch_lightning.metrics as plm
 
 
 
@@ -136,6 +137,8 @@ def save_confusion_matrix(cm, path2save, ordered_names):
 
 
 
+
+
 def compute_overall_accuracy(confusion_matrix: torch.Tensor):
     """
     compute overall accuracy from confusion matrix
@@ -151,10 +154,10 @@ def compute_overall_accuracy(confusion_matrix: torch.Tensor):
     if all_values == 0:
         return matrix_diagonal
     else:
-        return matrix_diagonal / all_values
+        return matrix_diagonal.float() / all_values
 
 
-def compute_intersection_union_per_class(confusion_matrix: torch.Tensor):
+def compute_intersection_union_per_class(confusion_matrix: torch.Tensor, return_existing_mask=False):
     """
     compute intersection over unionper class from confusion matrix
     Parameters
@@ -171,7 +174,10 @@ def compute_intersection_union_per_class(confusion_matrix: torch.Tensor):
     union = TP_plus_FN + TP_plus_FP - TP
     iou = 1e-8 + TP / (union + 1e-8)
     existing_class_mask = union > 1e-3
-    return iou, existing_class_mask
+    if return_existing_mask:
+        return iou, existing_class_mask
+    else:
+        return iou
 
 def compute_average_intersection_union(
         confusion_matrix: torch.Tensor, missing_as_one: bool=False):
@@ -186,9 +192,9 @@ def compute_average_intersection_union(
     missing_as_one: bool, default: False
     """
 
-    values, existing_classes_mask = compute_intersection_union_per_class(confusion_matrix)
+    values, existing_classes_mask = compute_intersection_union_per_class(confusion_matrix, return_existing_mask=True)
     if torch.sum(existing_classes_mask) == 0:
-        return return torch.sum(existing_classes_mask)
+        return torch.sum(existing_classes_mask)
     if missing_as_one:
         values[~existing_classes_mask] = 1
         existing_classes_mask[:] = True
@@ -206,10 +212,10 @@ def compute_mean_class_accuracy(confusion_matrix: torch.Tensor):
       square matrix
     """
     total_gts = confusion_matrix.sum(1)
-    labels_presents, _ = torch.where(total_gts > 0)
+    labels_presents = torch.where(total_gts > 0)[0]
     if(len(labels_presents) == 0):
         return total_gts[0]
     ones = torch.ones_like(total_gts)
     max_ones_total_gts = torch.cat([total_gts[None, :], ones[None, :]], 0).max(0)[0]
-    re = (torch.diagonal(confusion_matrix)[labels_presents] / max_ones_total_gts[labels_presents]).sum()
-    return re / len(labels_presents)
+    re = (torch.diagonal(confusion_matrix)[labels_presents].float() / max_ones_total_gts[labels_presents]).sum()
+    return re / float(len(labels_presents))

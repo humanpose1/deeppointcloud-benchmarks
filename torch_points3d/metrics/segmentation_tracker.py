@@ -7,6 +7,11 @@ from torch_points3d.metrics.base_tracker import LightningBaseTracker
 
 
 from torch_points3d.metrics.confusion_matrix import ConfusionMatrix
+from torch_points3d.metrics.confusion_matrix import compute_average_intersection_union
+from torch_points3d.metrics.confusion_matrix import compute_mean_class_accuracy
+from torch_points3d.metrics.confusion_matrix import compute_overall_accuracy
+from torch_points3d.metrics.confusion_matrix import compute_intersection_union_per_class
+
 from torch_points3d.metrics.base_tracker import BaseTracker, meter_value
 from torch_points3d.metrics.meters import APMeter
 from torch_points3d.datasets.segmentation import IGNORE_LABEL
@@ -119,7 +124,20 @@ class LightningSegmentationTracker(LightningBaseTracker):
         self._ignore_label = ignore_label
         self.confusion_matrix_metric = ConfusionMatrix(num_classes=num_classes)
 
+    @staticmethod
+    def compute_metrics_from_cm(matrix):
+        compute_overall_accuracy(matrix)
+        compute_mean_class_accuracy(matrix)
+        compute_average_intersection_union(matrix)
+
+        compute_intersection_union_per_class(matrix)
+
     def forward(self, model: model_interface.TrackerInterface, **kwargs):
         outputs = model.get_output()
         targets = model.get_labels()
-        self.confusion_matrix_metric(outputs, targets)
+        mask = targets != self._ignore_label
+        outputs = outputs[mask]
+        targets = targets[mask]
+        matrix = self.confusion_matrix_metric(outputs, targets)
+
+        return self.compute_metrics_from_cm(matrix)
