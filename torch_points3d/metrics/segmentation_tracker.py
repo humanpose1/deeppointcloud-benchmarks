@@ -118,19 +118,24 @@ class SegmentationTracker(BaseTracker):
 
 
 class LightningSegmentationTracker(LightningBaseTracker):
-    def __init__(self, num_classes: int, ignore_label: int = IGNORE_LABEL):
-        super().__init__()
+    def __init__(self, num_classes: int, ignore_label: int = IGNORE_LABEL, stage: str = "train"):
+        super().__init__(stage)
         self._num_classes = num_classes
         self._ignore_label = ignore_label
         self.confusion_matrix_metric = ConfusionMatrix(num_classes=num_classes)
 
-    @staticmethod
-    def compute_metrics_from_cm(matrix):
-        compute_overall_accuracy(matrix)
-        compute_mean_class_accuracy(matrix)
-        compute_average_intersection_union(matrix)
-
-        compute_intersection_union_per_class(matrix)
+    def compute_metrics_from_cm(self, matrix: torch.Tensor):
+        acc = compute_overall_accuracy(matrix)
+        macc = compute_mean_class_accuracy(matrix)
+        miou = compute_average_intersection_union(matrix)
+        iou_per_class = compute_intersection_union_per_class(matrix)
+        iou_per_class_dict = {i: 100 * v for i, v in enumerate(iou_per_class)}
+        return {
+            "{}_acc".format(self.stage): 100 * acc,
+            "{}_macc".format(self.stage): 100 * macc,
+            "{}_miou".format(self.stage): 100 * miou,
+            "{}_iou_per_class".format(self.stage): iou_per_class_dict,
+        }
 
     def forward(self, model: model_interface.TrackerInterface, **kwargs):
         outputs = model.get_output()
@@ -140,4 +145,14 @@ class LightningSegmentationTracker(LightningBaseTracker):
         targets = targets[mask]
         matrix = self.confusion_matrix_metric(outputs, targets)
 
-        return self.compute_metrics_from_cm(matrix)
+        segmentation_metrics = self.compute_metrics_from_cm(matrix)
+        loss_metrics = self.get_loss_metrics(model)
+        metrics = {**loss_metrics, **segmentation_metrics}
+        return metrics
+
+    def finalize(self):
+        matrix = self.confusion_matrix_metric.compute()
+        segmentation_metrics = self.compute_metrics_from_cm(matrix)
+        loss_metrics = self.get_final_loss_metrics()
+        metrics = {**loss_metrics, **segmentation_metrics}
+        return metrics

@@ -129,11 +129,10 @@ class LitLightningModule(LightningModule):
 
     def log_metrics(self, data, stage):
         if not self.trainer.running_sanity_check:
-            loss_metrics = self._rename_loss(self.model.get_current_losses(), stage)
             self.trackers[stage].track(self.model, data=data, **self.tracker_options)
             metrics = self.trackers[stage].get_metrics()
             self.sanetize_metrics(metrics)
-            self.log_dict({**metrics, **loss_metrics}, prog_bar=True, on_step=True, on_epoch=False)
+            self.log_dict({**metrics}, prog_bar=True, on_step=True, on_epoch=False)
 
     def on_stage_epoch_start(self, stage):
         tracker = self.trackers[stage]
