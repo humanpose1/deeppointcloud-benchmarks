@@ -850,7 +850,7 @@ class RandomSphereDropout(object):
         # list_ind = torch.randint(0, len(pos), (self.num_sphere,))
 
         ind, dist = ball_query(data.pos, center, radius=self.radius, max_num=-1, mode=1)
-        ind = ind[dist[:, 0] > 0]
+        ind = ind[dist[:, 0] >= 0]
         mask = torch.ones(len(pos), dtype=torch.bool)
         mask[ind[:, 0]] = False
         data = apply_mask(data, mask)

@@ -57,7 +57,7 @@ models:
     class: ms_spconv3d.MS_SparseConv3d_Shared
     conv_type: "SPARSE"
     loss_mode: "match"
-    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/benchmark/benchmark-MS_SmallUnet-20210116_184935/MS_SmallUnet.pt"
+    path_pretrained: "/home/sofiane/Documents/code/dpcb_perso/dpcb_07_09_2020/outputs/benchmark/benchmark-MS_SmallUnet-20210119_181925/MS_SmallUnet.pt"
     weight_name: "latest"
     define_constants:
       num_scales: 3
