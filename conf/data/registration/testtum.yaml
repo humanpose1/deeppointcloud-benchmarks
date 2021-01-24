@@ -31,8 +31,59 @@ data:
 
   train_transform:
     - transform: SaveOriginalPosId
-    - transform: FixedPoints
-      lparams: [20000]
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 5
+              radius: 1
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 1
+              radius: 0.1
+          - transform: RandomSphereDropout
+            params:
+              num_sphere: 3
+              radius: 0.5
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 0.2
+          - transform: PeriodicSampling
+            params:
+              period: 0.13
+              prop: 0.2
+              box_multiplier: 10
+          - transform: PeriodicSampling
+            params:
+              period: 0.16
+              prop: 0.2
+              box_multiplier: 10
+          - transform: PeriodicSampling
+            params:
+              period: 0.2
+              prop: 0.15
+              box_multiplier: 6
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 1
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 1
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 1
+          - transform: PeriodicSampling
+            params:
+              period: 0.1
+              prop: 1
     - transform: RandomNoise
       params:
         sigma: 0.01
