@@ -3,38 +3,25 @@ data:
   name: TestKitti
   class: testkitti.TestKITTIDataset
   dataroot: data
-  first_subsampling: 0.1
+  first_subsampling: 0.5
   max_dist_overlap: 0.5
-  min_size_block: 5
-  max_size_block: 7
+  min_size_block: 20
+  max_size_block: 30
   num_pos_pairs: 30000
-  min_points: 5000
+  min_points: 1000
   num_points: 5000
-  tau_1: 0.1
+  tau_1: 0.5
   tau_2: 0.05
   rot_thresh: 4
   trans_thresh: 0.15
   sym: True
   use_teaser: True
   noise_bound_teaser: 0.1
-  pre_transforms:
-    - transform: GridSampling3D
-      params:
-        size: ${data.first_subsampling}
   ss_transform:
     - transform: CubeCrop
       params:
-        c: 10
-        grid_size_center: 0.1
-    - transform: IrregularSampling
-      params:
-        d_half: 11
-        p: 1
-        grid_size_center: 0.1
-    - transform: CubeCrop
-      params:
-        c: 7
-        grid_size_center: 0.1
+        c: 20
+        grid_size_center: 0.01
   train_transform:
     - transform: SaveOriginalPosId
     - transform: RandomNoise
@@ -46,7 +33,7 @@ data:
         transform_options:
           - transform: RandomSphereDropout
             params:
-              num_sphere: 5
+              num_sphere: 8
               radius: 2
           - transform: RandomSphereDropout
             params:
@@ -54,55 +41,17 @@ data:
               radius: 3
           - transform: RandomSphereDropout
             params:
-              num_sphere: 0
-              radius: 0.0
-    - transform: LotteryTransform
-      params:
-        transform_options:
-          - transform: PeriodicSampling
-            params:
-              period: 0.4
-              prop: 0.2
-          - transform: PeriodicSampling
-            params:
-              period: 0.5
-              prop: 0.2
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.6
-              prop: 0.2
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.2
-              prop: 0.1
-              box_multiplier: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
-          - transform: PeriodicSampling
-            params:
-              period: 0.1
-              prop: 1
+              num_sphere: 15
+              radius: 0.7
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
-        rot_x: 360
-        rot_y: 360
-        rot_z: 360
+        rot_x: 0
+        rot_y: 0
+        rot_z: 0
     - transform: RandomScaleAnisotropic
       params:
-        scales: [0.9,1.2]
+        scales: [0.999,1]
     - transform: XYZFeature
       params:
         add_x: True
@@ -121,6 +70,12 @@ data:
         feat_name: 'ones'
   test_transform:
     - transform: SaveOriginalPosId
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 180
+        rot_y: 180
+        rot_z: 180
     - transform: XYZFeature
       params:
         add_x: True
