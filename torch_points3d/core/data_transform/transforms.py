@@ -716,7 +716,7 @@ class ShiftVoxels:
 
 class RandomDropout:
     """ Randomly drop points from the input data
-    
+
     Parameters
     ----------
     dropout_ratio : float, optional
@@ -925,6 +925,51 @@ class CubeCrop(object):
         return "{}(c={}, rotation={})".format(self.__class__.__name__, self.c, self.random_rotation)
 
 
+class EllipsoidCrop(object):
+    """
+
+    """
+    def __init__(self, a: float = 1, b: float = 1, c: float = 1, rot_x: float = 180, rot_y: float = 180, rot_z: float = 180):
+        """
+        Crop with respect to an ellipsoid.
+        the function of an ellipse is defined as:
+
+        Parameters
+        ----------
+        a: float, optional
+          half size of the cube
+        b: float_otional
+          rotation of the cube around x axis
+        c: float_otional
+          rotation of the cube around x axis
+
+
+        """
+        self._a2 = a ** 2
+        self._b2 = b ** 2
+        self._c2 = c ** 2
+        self.random_rotation = Random3AxisRotation(rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
+
+    def _compute_mask(self, pos: torch.Tensor):
+        mask = (torch.pos[:, 0] ** 2 / self._a2 + torch.pos[:, 1] ** 2 / self._b2 + torch.pos[:, 2] ** 2 / self._c2) < 1
+        return mask
+
+    def __call__(self, data):
+        data_temp = data.clone()
+        i = torch.randint(0, len(data.pos), (1,))
+        center = data_temp.pos[i]
+
+        data_temp = self.random_rotation(data_temp)
+        data_temp.pos = data_temp.pos - center
+        mask = self._compute_mask(data_temp.pos)
+        data = apply_mask(data, mask)
+        return data
+
+    def __repr__(self):
+        return "{}(a={}, b={}, c={}, rotation={})".format(self.__class__.__name__, self._a, self._b, self._c, self.random_rotation)
+
+
+
 class DensityFilter(object):
     """
     Remove points with a low density(compute the density with a radius search and remove points with)
@@ -957,4 +1002,3 @@ class DensityFilter(object):
         return "{}(radius_nn={}, min_num={}, skip_keys={})".format(
             self.__class__.__name__, self.radius_nn, self.min_num, self.skip_keys
         )
-
