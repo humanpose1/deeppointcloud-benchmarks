@@ -951,7 +951,7 @@ class EllipsoidCrop(object):
         self.random_rotation = Random3AxisRotation(rot_x=rot_x, rot_y=rot_y, rot_z=rot_z)
 
     def _compute_mask(self, pos: torch.Tensor):
-        mask = (torch.pos[:, 0] ** 2 / self._a2 + torch.pos[:, 1] ** 2 / self._b2 + torch.pos[:, 2] ** 2 / self._c2) < 1
+        mask = (pos[:, 0] ** 2 / self._a2 + pos[:, 1] ** 2 / self._b2 + pos[:, 2] ** 2 / self._c2) < 1
         return mask
 
     def __call__(self, data):
