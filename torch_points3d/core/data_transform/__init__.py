@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import torch_geometric.transforms as T
 from .transforms import *
+from .kitti_transforms import *
 from .grid_transform import *
 from .sparse_transforms import *
 from .inference_transforms import *
