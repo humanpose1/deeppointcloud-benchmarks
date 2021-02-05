@@ -22,12 +22,6 @@ data:
       params:
         radius: 0.5
         max_nn: 100
-    - transform: RandomizePlane
-      params:
-        ransac_thresh: 5e-7
-        normal_thresh: 1e-2
-        iterations: 10000
-        sigma_noise: 2
   ss_transform:
     - transform: CubeCrop
       params:

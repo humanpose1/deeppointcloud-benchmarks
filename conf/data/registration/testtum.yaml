@@ -86,7 +86,7 @@ data:
               prop: 1
     - transform: RandomNoise
       params:
-        sigma: 0.01
+        sigma: 0.007
         clip: 0.03
     - transform: Random3AxisRotation
       params:
