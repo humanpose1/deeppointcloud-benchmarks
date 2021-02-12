@@ -36,9 +36,22 @@ data:
     - transform: LotteryTransform
       params:
         transform_options:
+          - transform: RandomParamTransform
+            transform_name: PeriodicSampling
+            transform_params:
+              period:
+                min: 0.01
+                max: 0.04
+                type: "float"
+              prop:
+                min: 0.15
+                max: 0.7
+                type: "float"
+              box_multiplier:
+                value: 10
           - transform: PeriodicSampling
             params:
-              period: 0.08
+              period: 0.025
               prop: 0.2
               box_multiplier: 6
           - transform: PeriodicSampling
