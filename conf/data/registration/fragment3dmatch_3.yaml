@@ -130,11 +130,11 @@ data:
               transform_params:
                 num_sphere:
                   min: 0
-                  max: 400
+                  max: 300
                   type: "int"
                 radius:
                   min: 0.04
-                  max: 0.1
+                  max: 0.08
                   type: "float"
     - transform: RandomNoise
       params:
