@@ -150,6 +150,8 @@ data:
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
+    - transform: FixedPoints
+      lparams: [20000]
     - transform: AddOnes
     - transform: AddFeatByKey
       params:
