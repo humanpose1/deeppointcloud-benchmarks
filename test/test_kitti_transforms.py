@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(DIR_PATH, ".."))
 torch.manual_seed(0)
 
 
-from torch_points3d.core.data_transform import RandomizePlane
+from torch_points3d.core.data_transform import RandomizePlane, KittiPeriodicSampling
 
 
 np.random.seed(0)
@@ -46,12 +46,17 @@ class Testhelpers(unittest.TestCase):
         trans = RandomizePlane()
         center = torch.zeros(3)
         normal = torch.tensor([0, 0, 1]).float()
-        plane = trans._random_plane(normal, center, 100, 1)
+        point = torch.randn(100, 3)
+        plane = trans._random_plane(point, normal, center, 100)
         estimated_normal, _ = trans._pca_compute(plane)
         torch.testing.assert_allclose(normal, estimated_normal)
 
-    def test_randomize_plane(self):
-        pass
+    def test_kitti_periodic_sampling(self):
+        tr = KittiPeriodicSampling()
+        pos = torch.randn(500, 3)
+        data = Data(pos=pos)
+        data = tr(data)
+        self.assertGreater(500, len(data.pos))
 
 
 if __name__ == "__main__":
