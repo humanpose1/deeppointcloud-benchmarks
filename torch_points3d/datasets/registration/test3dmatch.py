@@ -112,7 +112,7 @@ class TestPair3DMatch(Base3DMatchTest, GeneralFragment):
     def download(self):
         super().download()
 
-class Test3DMatchDataset(BaseSiameseDataset):
+class TestPair3DMatchDataset(BaseSiameseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         pre_transform = self.pre_transform
@@ -123,7 +123,7 @@ class Test3DMatchDataset(BaseSiameseDataset):
         self.train_dataset = TestPair3DMatch(
             root=self._data_path,
             pre_transform=pre_transform,
-            transform=test_transform,
+            transform=train_transform,
             num_pos_pairs=dataset_opt.num_pos_pairs,
             max_dist_overlap=dataset_opt.max_dist_overlap,
             self_supervised=True,

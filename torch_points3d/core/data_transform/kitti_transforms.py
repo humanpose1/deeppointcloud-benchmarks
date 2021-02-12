@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import numba
 
+from .grid_transform import GridSampling3D
+from .transforms import apply_mask
 
 class ComputeNormals(object):
 
@@ -93,3 +95,39 @@ class RandomizePlane(object):
             data.norm[mask] = normal
         data.mask_randomize_plane = mask
         return data
+
+
+
+class KittiPeriodicSampling(object):
+    """
+    sample point at a periodic distance Idea from J-E Deschaud
+    """
+
+    def __init__(self, period: float = 0.1, prop: float = 0.1,
+                 remove_distance: float = 4.0,
+                 pow_dist: float = 0.5,
+                 grid_size_center: float = 0.01,
+                 skip_keys=[]):
+
+        self.pulse = 2 * np.pi / period
+        self.thresh = np.cos(self.pulse * prop * period * 0.5)
+        self.pow_dist = pow_dist
+        self.remove_distance = remove_distance
+        self.grid_sampling = GridSampling3D(grid_size_center, mode="last")
+        self.skip_keys = skip_keys
+
+    def __call__(self, data):
+
+        data_c = self.grid_sampling(data.clone())
+        i = torch.randint(0, len(data_c.pos), (1,))
+        center = data_c.pos[i]
+        d_p = torch.norm(data.pos - center, dim=1)
+        mask_0 = d_p > self.remove_distance
+        mask_1 = torch.cos(self.pulse * d_p**self.pow_dist) > self.thresh
+        mask = torch.logical_and(mask_0, mask_1)
+        data = apply_mask(data, mask, self.skip_keys)
+        return data
+
+    def __repr__(self):
+        return "{}(pulse={}, thresh={}, remove_distance={}, grid_sampling={}, skip_keys={})".format(
+            self.__class__.__name__, self.pulse, self.thresh, self.remove_distance, self.grid_sampling, self.skip_keys)
