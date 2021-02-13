@@ -83,8 +83,8 @@ data:
               transform_name: RandomSphereDropout
               transform_params:
                 num_sphere:
-                  min: 0
-                  max: 10
+                  min: 1
+                  max: 5
                   type: "int"
                 radius:
                   min: 0.1
@@ -95,8 +95,8 @@ data:
               transform_name: RandomSphereDropout
               transform_params:
                 num_sphere:
-                  min: 0
-                  max: 5
+                  min: 1
+                  max: 3
                   type: "int"
                 radius:
                   min: 0.2
@@ -118,7 +118,7 @@ data:
               transform_name: RandomSphereDropout
               transform_params:
                 num_sphere:
-                  min: 0
+                  min: 1
                   max: 50
                   type: "int"
                 radius:
@@ -130,8 +130,8 @@ data:
               transform_name: RandomSphereDropout
               transform_params:
                 num_sphere:
-                  min: 0
-                  max: 300
+                  min: 1
+                  max: 200
                   type: "int"
                 radius:
                   min: 0.04
