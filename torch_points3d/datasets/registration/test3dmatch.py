@@ -99,6 +99,9 @@ class TestPair3DMatch(Base3DMatchTest, GeneralFragment):
         self.ss_transform = ss_transform
         self.is_online_matching = False
         self.use_fps = use_fps
+        self.min_points = min_points
+        self.min_size_block = min_size_block
+        self.max_size_block = max_size_block
 
     def __getitem__(self, idx):
         return self.get_fragment(idx)

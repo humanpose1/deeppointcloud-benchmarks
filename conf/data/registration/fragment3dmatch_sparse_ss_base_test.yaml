@@ -105,7 +105,7 @@ data:
         add_x: True
         add_y: True
         add_z: True
-    - tr$ansform: GridSampling3D
+    - transform: GridSampling3D
       params:
         size: ${data.first_subsampling}
         quantize_coords: True
