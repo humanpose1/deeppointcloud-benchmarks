@@ -229,7 +229,7 @@ models:
     conv_type: "SPARSE"
     loss_mode: "match"
     define_constants:
-      num_scales: 3
+      num_scales: 4
       out_feat: 32
     backend: "torchsparse"
     option_unet:
