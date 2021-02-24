@@ -2,7 +2,7 @@
 compute features, evaluate metrics and save results
 only axcept fragment
 """
-
+import copy
 import open3d
 import torch
 import hydra
@@ -218,7 +218,12 @@ def main(cfg):
     # Generic config
 
     dataset = instantiate_dataset(cfg.data)
-    model = checkpoint.create_model(dataset, weight_name=cfg.training.weight_name)
+    if not checkpoint.is_empty:
+        model = checkpoint.create_model(dataset, weight_name=cfg.training.weight_name)
+    else:
+        log.info("No Checkpoint for this model")
+        model = instantiate_model(copy.deepcopy(cfg), dataset)
+        model.set_pretrained_weights()
     log.info(model)
     log.info("Model size = %i", sum(param.numel() for param in model.parameters() if param.requires_grad))
 
