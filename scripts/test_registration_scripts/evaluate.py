@@ -212,7 +212,7 @@ def main(cfg):
     torch.backends.cudnn.enabled = cfg.training.enable_cudnn
 
     # Checkpoint
-    checkpoint = ModelCheckpoint(cfg.training.checkpoint_dir, cfg.model_name, cfg.training.weight_name, strict=True)
+    checkpoint = ModelCheckpoint(cfg.training.checkpoint_dir, cfg.model_name, cfg.training.weight_name, strict=False)
 
     # Setup the dataset config
     # Generic config
