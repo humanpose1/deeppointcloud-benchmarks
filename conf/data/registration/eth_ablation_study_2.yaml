@@ -42,6 +42,8 @@ data:
               grid_size_center: 0.02
   train_transform:
     - transform: SaveOriginalPosId
+    - transform: FixedPoints
+      lparams: [20000]
     - transform: RandomNoise
       params:
         sigma: 0.01
