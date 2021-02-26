@@ -3,7 +3,7 @@ data:
   class: testeth.ETHDataset
   name: ETH
   dataroot: data
-  first_subsampling: 0.06
+  first_subsampling: 0.04
   max_dist_overlap: 0.05
   min_size_block: 5
   max_size_block: 7

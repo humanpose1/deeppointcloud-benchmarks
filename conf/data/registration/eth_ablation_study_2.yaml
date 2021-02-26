@@ -3,7 +3,7 @@ data:
   class: testeth.ETHDataset
   name: ETH
   dataroot: data
-  first_subsampling: 0.06
+  first_subsampling: 0.04
   max_dist_overlap: 0.05
   min_size_block: 5
   max_size_block: 7
@@ -38,25 +38,7 @@ data:
 
           - transform: CubeCrop
             params:
-              c: 20
-              grid_size_center: 0.02
-    - transform: ComposeTransform
-      params:
-        transform_options:
-          - transform: RandomParamTransform
-            params:
-              transform_name: FixedSphereDropout
-              transform_params:
-                radius:
-                  min: 0.4
-                  max: 1.5
-                  type: "float"
-                name_ind:
-                  value: "ind_sensors"
-
-          - transform: CubeCrop
-            params:
-              c: 5.5
+              c: 50
               grid_size_center: 0.02
   train_transform:
     - transform: SaveOriginalPosId
