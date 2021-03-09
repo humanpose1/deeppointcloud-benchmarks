@@ -1,0 +1,106 @@
+data:
+  task: registration
+  name: TestKitti
+  class: testkitti.TestKITTIDataset
+  dataroot: data
+  first_subsampling: 0.1
+  max_dist_overlap: 0.5
+  min_size_block: 20
+  max_size_block: 30
+  num_pos_pairs: 30000
+  min_points: 500
+  num_points: 5000
+  tau_1: 0.5
+  tau_2: 0.05
+  rot_thresh: 4
+  trans_thresh: 0.15
+  sym: True
+  use_teaser: True
+  noise_bound_teaser: 0.1
+  pre_transform:
+    - transform: ComputeNormals
+      params:
+        radius: 0.5
+        max_nn: 100
+  ss_transform:
+    - transform: CubeCrop
+      params:
+        c: 55
+        grid_size_center: 0.01
+  train_transform:
+    - transform: SaveOriginalPosId
+    - transform: RandomNoise
+      params:
+        sigma: 0.1
+        clip: 0.2
+    - transform: LotteryTransform
+      params:
+        transform_options:
+          - transform: KittiPeriodicSampling
+            params:
+              prop: 1.0
+              remove_distance: 4.0
+
+          - transform: KittiPeriodicSampling
+            params:
+              prop: 1.0
+              remove_distance: 4.0
+
+          - transform: RandomParamTransform
+            params:
+              transform_name: KittiPeriodicSampling
+              transform_params:
+                period:
+                  min: 0.1
+                  max: 0.3
+                  type: "float"
+                prop:
+                  min: 0.3
+                  max: 1.0
+                  type: "float"
+                pow_dist:
+                  value: 0.5
+                remove_distance:
+                  value: 4.0
+    - transform: Random3AxisRotation
+      params:
+        apply_rotation: True
+        rot_x: 10
+        rot_y: 180
+        rot_z: 10
+    - transform: RandomScaleAnisotropic
+      params:
+        scales: [0.9,1.1]
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: ShiftVoxels
+    - transform: AddOnes
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'ones'
+  test_transform:
+    - transform: SaveOriginalPosId
+    - transform: XYZFeature
+      params:
+        add_x: True
+        add_y: True
+        add_z: True
+    - transform: GridSampling3D
+      params:
+        size: ${data.first_subsampling}
+        quantize_coords: True
+        mode: "last"
+    - transform: AddOnes
+    - transform: AddFeatByKey
+      params:
+        add_to_x: True
+        feat_name: 'ones'

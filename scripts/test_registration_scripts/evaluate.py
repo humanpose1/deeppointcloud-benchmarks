@@ -96,15 +96,15 @@ def compute_metrics(
     """
 
     res = dict()
-
+    t0 = time.time()
     matches_pred = get_matches(feat, feat_target, sym=sym)
-
+    t1 = time.time()
     hit_ratio = compute_hit_ratio(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]], T_gt, tau_1)
     res["hit_ratio"] = hit_ratio.item()
     res["feat_match_ratio"] = float(hit_ratio.item() > tau_2)
-
+    res["time_get_matches"] = t1 - t0
     # fast global registration
-
+    t = time.time()
     T_fgr = fast_global_registration(xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]])
     trans_error_fgr, rot_error_fgr = compute_transfo_error(T_fgr, T_gt)
     res["trans_error_fgr"] = trans_error_fgr.item()
@@ -112,6 +112,7 @@ def compute_metrics(
     res["rre_fgr"] = float(rot_error_fgr.item() < rot_thresh)
     res["rte_fgr"] = float(trans_error_fgr.item() < trans_thresh)
     res["sr_fgr"] = compute_scaled_registration_error(xyz, T_gt, T_fgr).item()
+    res["time_fgr"] = time.time() - t
     if xyz_gt is not None and xyz_target_gt is not None:
         res["registration_recall_fgr"] = compute_registration_recall(
             xyz_gt, xyz_target_gt, T_fgr, registration_recall_thresh
@@ -119,6 +120,7 @@ def compute_metrics(
 
     # teaser pp
     if use_teaser:
+        t = time.time()
         T_teaser = teaser_pp_registration(
             xyz[matches_pred[:, 0]], xyz_target[matches_pred[:, 1]], noise_bound=noise_bound_teaser
         )
@@ -128,6 +130,7 @@ def compute_metrics(
         res["rre_teaser"] = float(rot_error_teaser.item() < rot_thresh)
         res["rte_teaser"] = float(trans_error_teaser.item() < trans_thresh)
         res["sr_teaser"] = compute_scaled_registration_error(xyz, T_gt, T_teaser).item()
+        res["time_teaser"] = time.time() - t
         if xyz_gt is not None and xyz_target_gt is not None:
             res["registration_recall_teaser"] = compute_registration_recall(
                 xyz_gt, xyz_target_gt, T_teaser, registration_recall_thresh
@@ -153,9 +156,10 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
     with Ctq(loader) as tq_test_loader:
         for i, data in enumerate(tq_test_loader):
             with torch.no_grad():
+                t0 = time.time()
                 model.set_input(data, device)
                 model.forward()
-
+                t1 = time.time()
                 name_scene, name_pair_source, name_pair_target = dataset.test_dataset[0].get_name(i)
                 input, input_target = model.get_input()
                 xyz, xyz_target = input.pos, input_target.pos
@@ -169,7 +173,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
                 rand_target = torch.randperm(len(feat_target))[: cfg.data.num_points]
                 res = dict(name_scene=name_scene, name_pair_source=name_pair_source, name_pair_target=name_pair_target)
                 T_gt = estimate_transfo(xyz[matches_gt[:, 0]], xyz_target[matches_gt[:, 1]])
-
+                t2 = time.time()
                 metric = compute_metrics(
                     xyz[rand],
                     xyz_target[rand_target],
@@ -190,6 +194,10 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
                     registration_recall_thresh=reg_thresh,
                 )
                 res = dict(**res, **metric)
+                res["time_feature"] = t1 - t0
+                res["time_feature_per_point"] = (t1 - t0) / (len(input.pos) + len(input_target.pos))
+                res["time_prep"] = t2 - t1
+
                 list_res.append(res)
 
     df = pd.DataFrame(list_res)
