@@ -45,11 +45,12 @@ log = logging.getLogger(__name__)
 def torch2o3d(data, color=None, ind=None):
     pcd = open3d.geometry.PointCloud()
     if ind is not None:
-        pcd.points = open3d.utility.Vector3dVector(data.pos[ind])
+        pcd.points = open3d.utility.Vector3dVector(data.pos[ind].cpu().numpy())
     else:
-        pcd.points = open3d.utility.Vector3dVector(data.pos)
+        pcd.points = open3d.utility.Vector3dVector(data.pos.cpu().numpy())
     if color is not None:
         pcd.paint_uniform_color(color)
+    pcd.estimate_normals()
     return pcd
 
 
@@ -126,6 +127,9 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
     t = 5
     if cfg.t is not None:
         t = cfg.t
+    r = 0.1
+    if cfg.r is not None:
+        r = cfg.r
     print(loader)
     print(ind)
     data = loader[ind]
@@ -150,6 +154,7 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
         rand_target = torch.randperm(len(feat_target))[: cfg.data.num_points]
         T_gt = estimate_transfo(xyz[matches_gt[:, 0]].clone(), xyz_target[matches_gt[:, 1]].clone())
         matches_pred = get_matches(feat[rand], feat_target[rand_target], sym=cfg.data.sym)
+        # For color
         inliers = (
             torch.norm(
                 xyz[rand][matches_pred[:, 0]] @ T_gt[:3, :3].T
@@ -159,15 +164,23 @@ def run(model: BaseModel, dataset: BaseDataset, device, cfg):
             )
             < cfg.data.tau_1
         )
-
+        # compute transformation
+        T_teaser = teaser_pp_registration(
+            xyz[rand][matches_pred[:, 0]], xyz_target[rand_target][matches_pred[:, 1]], noise_bound=cfg.data.tau_1
+        )
         pcd_source = torch2o3d(input, [1, 0.7, 0.1])
-        pcd_source.transform(T_gt.cpu().numpy())
+
         pcd_target = torch2o3d(input_target, [0, 0.15, 0.9])
-        rand_ind = torch.randperm(len(rand[matches_pred[:, 0]]))[:40]
+        open3d.visualization.draw_geometries([pcd_source, pcd_target])
+        pcd_source.transform(T_teaser.cpu().numpy())
+        open3d.visualization.draw_geometries([pcd_source, pcd_target])
+        pcd_source.transform(np.linalg.inv(T_teaser.cpu().numpy()))
+        rand_ind = torch.randperm(len(rand[matches_pred[:, 0]]))[:250]
+        pcd_source.transform(T_gt.cpu().numpy())
         kp_s = torch2o3d(input, ind=rand[matches_pred[:, 0]][rand_ind])
         kp_s.transform(T_gt.cpu().numpy())
         kp_t = torch2o3d(input_target, ind=rand_target[matches_pred[:, 1]][rand_ind])
-        match_visualizer(pcd_source, kp_s, pcd_target, kp_t, inliers[rand_ind].cpu().numpy(), radius=0.1, t=t)
+        match_visualizer(pcd_source, kp_s, pcd_target, kp_t, inliers[rand_ind].cpu().numpy(), radius=r, t=t)
 
 
 @hydra.main(config_path="../../conf/config.yaml", strict=False)
