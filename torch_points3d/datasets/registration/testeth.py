@@ -131,6 +131,11 @@ class TestPairETH(BasePCRBTest):
         super().process()
 
 
+class TestPairETHSplit(TestPairETH):
+    DATASETS = [["apartment", "http://robotics.ethz.ch/~asl-datasets/apartment_03-Dec-2011-18_13_33/csv_global/global_frame.zip"],
+                ["hauptgebaude", "http://robotics.ethz.ch/~asl-datasets/ETH_hauptgebaude_23-Aug-2011-18_43_49/csv_global/global_frame.zip"],
+                ["stairs", "http://robotics.ethz.ch/~asl-datasets/stairs_26-Aug-2011-14_26_14/csv_global/global_frame.zip"],
+                ["plain", "http://robotics.ethz.ch/~asl-datasets/plain_01-Sep-2011-16_39_18/csv_global/global_frame.zip"]]
 
 class ETHDataset(BaseSiameseDataset):
     """
@@ -138,8 +143,6 @@ class ETHDataset(BaseSiameseDataset):
     https://projects.asl.ethz.ch/datasets/doku.php?id=laserregistration:laserregistration
     as defined in https://github.com/iralabdisco/point_clouds_registration_benchmark.
     """
-
-
     def __init__(self, dataset_opt):
 
         super().__init__(dataset_opt)
@@ -166,6 +169,38 @@ class ETHDataset(BaseSiameseDataset):
                                         max_dist_overlap=dataset_opt.max_dist_overlap,
                                         num_pos_pairs=dataset_opt.num_pos_pairs,
                                         self_supervised=False)
+
+class ETHSplitDataset(BaseSiameseDataset):
+    """
+    this class is a dataset for testing registration algorithm on ETH dataset (only a split)
+    https://projects.asl.ethz.ch/datasets/doku.php?id=laserregistration:laserregistration
+    as defined in https://github.com/iralabdisco/point_clouds_registration_benchmark.
+    """
+    def __init__(self, dataset_opt):
+        super().__init__(dataset_opt)
+        pre_transform = self.pre_transform
+        train_transform = self.train_transform
+        ss_transform = getattr(self, "ss_transform", None)
+        test_transform = self.test_transform
+
+        # training is similar to test but only unsupervised training is allowed XD
+        self.train_dataset = TestPairETHSplit(root=self._data_path,
+                                              pre_transform=pre_transform,
+                                              transform=train_transform,
+                                              max_dist_overlap=dataset_opt.max_dist_overlap,
+                                              self_supervised=True,
+                                              min_size_block=dataset_opt.min_size_block,
+                                              max_size_block=dataset_opt.max_size_block,
+                                              num_pos_pairs=dataset_opt.num_pos_pairs,
+                                              min_points=dataset_opt.min_points,
+                                              ss_transform=ss_transform,
+                                              use_fps=dataset_opt.use_fps)
+        self.test_dataset = TestPairETHSplit(root=self._data_path,
+                                             pre_transform=pre_transform,
+                                             transform=test_transform,
+                                             max_dist_overlap=dataset_opt.max_dist_overlap,
+                                             num_pos_pairs=dataset_opt.num_pos_pairs,
+                                             self_supervised=False)
 
 
 
