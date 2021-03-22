@@ -184,23 +184,23 @@ class ETHSplitDataset(BaseSiameseDataset):
         test_transform = self.test_transform
 
         # training is similar to test but only unsupervised training is allowed XD
-        self.train_dataset = TestPairETHSplit(root=self._data_path,
-                                              pre_transform=pre_transform,
-                                              transform=train_transform,
-                                              max_dist_overlap=dataset_opt.max_dist_overlap,
-                                              self_supervised=True,
-                                              min_size_block=dataset_opt.min_size_block,
-                                              max_size_block=dataset_opt.max_size_block,
-                                              num_pos_pairs=dataset_opt.num_pos_pairs,
-                                              min_points=dataset_opt.min_points,
-                                              ss_transform=ss_transform,
-                                              use_fps=dataset_opt.use_fps)
-        self.test_dataset = TestPairETHSplit(root=self._data_path,
-                                             pre_transform=pre_transform,
-                                             transform=test_transform,
-                                             max_dist_overlap=dataset_opt.max_dist_overlap,
-                                             num_pos_pairs=dataset_opt.num_pos_pairs,
-                                             self_supervised=False)
+        self.train_dataset = TestPairETH(root=self._data_path,
+                                         pre_transform=pre_transform,
+                                         transform=train_transform,
+                                         max_dist_overlap=dataset_opt.max_dist_overlap,
+                                         self_supervised=True,
+                                         min_size_block=dataset_opt.min_size_block,
+                                         max_size_block=dataset_opt.max_size_block,
+                                         num_pos_pairs=dataset_opt.num_pos_pairs,
+                                         min_points=dataset_opt.min_points,
+                                         ss_transform=ss_transform,
+                                         use_fps=dataset_opt.use_fps)
+        self.test_dataset = TestPairETH(root=self._data_path,
+                                        pre_transform=pre_transform,
+                                        transform=test_transform,
+                                        max_dist_overlap=dataset_opt.max_dist_overlap,
+                                        num_pos_pairs=dataset_opt.num_pos_pairs,
+                                        self_supervised=False)
 
 
 
