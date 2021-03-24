@@ -130,13 +130,6 @@ class TestPairETH(BasePCRBTest):
     def process(self):
         super().process()
 
-
-class TestPairETHSplit(TestPairETH):
-    DATASETS = [["apartment", "http://robotics.ethz.ch/~asl-datasets/apartment_03-Dec-2011-18_13_33/csv_global/global_frame.zip"],
-                ["hauptgebaude", "http://robotics.ethz.ch/~asl-datasets/ETH_hauptgebaude_23-Aug-2011-18_43_49/csv_global/global_frame.zip"],
-                ["stairs", "http://robotics.ethz.ch/~asl-datasets/stairs_26-Aug-2011-14_26_14/csv_global/global_frame.zip"],
-                ["plain", "http://robotics.ethz.ch/~asl-datasets/plain_01-Sep-2011-16_39_18/csv_global/global_frame.zip"]]
-
 class ETHDataset(BaseSiameseDataset):
     """
     this class is a dataset for testing registration algorithm on ETH dataset
