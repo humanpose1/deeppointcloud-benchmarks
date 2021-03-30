@@ -12,12 +12,13 @@ training:
         # accumulated_gradient: 1
         # accumulated_gradient: -1 # Accumulate gradient accumulated_gradient * batch_size
         grad_clip: -1
+        weight_decay: 1e-4
         optimizer:
             class: SGD
             params:
                 lr: ${training.optim.base_lr} # The path is cut from training
                 momentum: 0.8
-                weight_decay: 1e-4
+                weight_decay: ${training.optim.weight_decay}
         lr_scheduler:
           class: ExponentialLR
           params:

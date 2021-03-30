@@ -33,6 +33,7 @@ from torch_points3d.core.data_transform import (
     NormalizeFeature,
     SphereCrop,
     CubeCrop,
+    EllipsoidCrop,
     RandomSphereDropout,
     DensityFilter,
     LotteryTransform,
@@ -309,6 +310,16 @@ class Testhelpers(unittest.TestCase):
 
     def test_sphere_crop(self):
         tr = SphereCrop(radius=0.5)
+        pos = torch.randn(100, 3)
+        x = torch.randn(100, 6)
+        data = Data(pos=pos, x=x)
+        data = tr(data)
+        self.assertEqual(len(data.x), len(data.pos))
+        self.assertEqual(len(data.x) < 100, True)
+        self.assertEqual(len(data.pos) < 100, True)
+
+    def test_ellipsoid_crop(self):
+        tr = EllipsoidCrop(a=0.5, b=0.1, c=0.2)
         pos = torch.randn(100, 3)
         x = torch.randn(100, 6)
         data = Data(pos=pos, x=x)
