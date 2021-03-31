@@ -1,6 +1,8 @@
 models:
+  path_pretrained: ""
   MS_SVCONV_B4cm_X2_1head:
     class: sparseconv3d.MS_SparseConvModel
+    path_prerained: ${models.path_pretrained}
     conv_type: "SPARSE"
     define_constants:
       num_scales: 1
@@ -47,6 +49,7 @@ models:
 
   MS_SVCONV_B4cm_X2_3head:
     class: sparseconv3d.MS_SparseConvModel
+    path_prerained: ${models.path_pretrained}
     conv_type: "SPARSE"
     define_constants:
       num_scales: 3
