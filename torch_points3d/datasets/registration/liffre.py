@@ -55,10 +55,12 @@ class Liffre(Dataset, GeneralFragment):
                  max_dist_overlap=5e-3,
                  num_pos_pairs=1024,
                  min_points=500,
+                 use_fps=False,
     ):
         """
         Liffre Dataset for
         """
+        self.use_fps = use_fps
         self.is_online_matching = False
         self.min_points = min_points
         self.self_supervised = self_supervised
@@ -185,8 +187,9 @@ class TestLiffre(Base3DMatchTest, GeneralFragment):
                  debug=False,
                  num_pos_pairs=200,
                  max_dist_overlap=0.01,
-                 min_points=500):
-        setattr(self.__class__, "process", self.process)
+                 min_points=500,
+                 use_fps=False):
+        self.use_fps = use_fps
         Base3DMatchTest.__init__(self, root=root,
                                  transform=transform,
                                  pre_transform=pre_transform,
@@ -205,6 +208,8 @@ class TestLiffre(Base3DMatchTest, GeneralFragment):
         No need to Download
         """
         pass
+    def process(self):
+        super().process()
 
     def __getitem__(self, idx):
         return self.get_fragment(idx)
