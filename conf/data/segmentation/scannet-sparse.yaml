@@ -15,7 +15,7 @@ data:
   train_pre_batch_collate_transform:
     - transform: ClampBatchSize
       params:
-        num_points: 400000
+        num_points: 350000
 
   train_transform:
     - transform: ElasticDistortion
