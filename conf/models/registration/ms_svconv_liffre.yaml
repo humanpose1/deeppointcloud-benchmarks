@@ -1,6 +1,6 @@
 models:
   path_pretrained: ""
-  SVCONV_B0p1mm_X2:
+  SVCONV_B0p1mm:
     class: spconv3d.SparseConv3d
     path_pretrained: ${models.path_pretrained}
     weight_name: "latest"
