@@ -27,9 +27,24 @@ data:
       params:
         size: ${data.first_subsampling}
   ss_transform:
-    - transform: CubeCrop
+    - transform: ComposeTransform
       params:
-        c: ${data.crop_size}
+        transform_options:
+          - transform: RandomParamTransform
+            params:
+              transform_name: FixedSphereDropout
+              transform_params:
+                radius:
+                  min: 0.4
+                  max: 1.5
+                  type: "float"
+                name_ind:
+                  value: "ind_sensors"
+
+          - transform: CubeCrop
+            params:
+              c: ${data.crop_size}
+              grid_size_center: 0.02
   train_transform:
     - transform: SaveOriginalPosId
     - transform: FixedPoints
