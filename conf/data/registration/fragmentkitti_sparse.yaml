@@ -40,9 +40,9 @@ data:
     - transform: Random3AxisRotation
       params:
         apply_rotation: True
-        rot_x: 2
-        rot_y: 360
-        rot_z: 2
+        rot_x: 180
+        rot_y: 180
+        rot_z: 180
     - transform: RandomScaleAnisotropic
       params:
         scales: [0.9,1.2]
